@@ -18,14 +18,21 @@ init_db()
 # ==================== 加载判读规则 ====================
 @st.cache_data
 def load_rules():
-    rules = []
-    with open("rules.csv", "r", encoding="utf-8-sig") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            rules.append(row)
+    rules = [
+        {"编号前缀": "N", "参考品大类": "阴性参考品", "质量标准": "均为阴性", "预期结果": "阴性", "CY5规则": "≤38", "FAM规则": "Undetermined或≥42", "TexasRed规则": "Undetermined或≥42", "VIC规则": "Undetermined或≥42", "结果判读规则": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\";\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\";\"VIC通道Ct值\"为\"Undetermined或Ct≥42\";\"CY5通道Ct值\"为\"Ct≤38\""},
+        {"编号前缀": "P1-P10", "参考品大类": "阳性参考品", "质量标准": "甲型流感病毒阳性", "预期结果": "阳性", "CY5规则": "≤38", "FAM规则": "≤38", "TexasRed规则": "Undetermined或≥42", "VIC规则": "Undetermined或≥42", "结果判读规则": "\"FAM通道Ct值\"为\"Ct≤38\";\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\";\"VIC通道Ct值\"为\"Undetermined或Ct≥42\";\"CY5通道Ct值\"为\"Ct≤38\""},
+        {"编号前缀": "P11-P14", "参考品大类": "阳性参考品", "质量标准": "乙型流感病毒阳性", "预期结果": "阳性", "CY5规则": "≤38", "FAM规则": "Undetermined或≥42", "TexasRed规则": "≤38", "VIC规则": "Undetermined或≥42", "结果判读规则": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\";\"Texas Red通道Ct值\"为\"Ct≤38\";\"VIC通道Ct值\"为\"Undetermined或Ct≥42\";\"CY5通道Ct值\"为\"Ct≤38\""},
+        {"编号前缀": "P15-P20", "参考品大类": "阳性参考品", "质量标准": "2019-nCoV新型冠状病毒阳性", "预期结果": "阳性", "CY5规则": "≤38", "FAM规则": "Undetermined或≥42", "TexasRed规则": "Undetermined或≥42", "VIC规则": "≤38", "结果判读规则": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\";\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\";\"VIC通道Ct值\"为\"Ct≤38\";\"CY5通道Ct值\"为\"Ct≤38\""},
+        {"编号前缀": "S1-S5", "参考品大类": "最低检出限参考品", "质量标准": "甲型流感病毒阳性", "预期结果": "阳性", "CY5规则": "≤38", "FAM规则": "≤38", "TexasRed规则": "Undetermined或≥42", "VIC规则": "Undetermined或≥42", "结果判读规则": "\"FAM通道Ct值\"为\"Ct≤38\";\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\";\"VIC通道Ct值\"为\"Undetermined或Ct≥42\";\"CY5通道Ct值\"为\"Ct≤38\""},
+        {"编号前缀": "S6-S7", "参考品大类": "最低检出限参考品", "质量标准": "乙型流感病毒阳性", "预期结果": "阳性", "CY5规则": "≤38", "FAM规则": "Undetermined或≥42", "TexasRed规则": "≤38", "VIC规则": "Undetermined或≥42", "结果判读规则": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\";\"Texas Red通道Ct值\"为\"Ct≤38\";\"VIC通道Ct值\"为\"Undetermined或Ct≥42\";\"CY5通道Ct值\"为\"Ct≤38\""},
+        {"编号前缀": "S8", "参考品大类": "最低检出限参考品", "质量标准": "2019-nCoV新型冠状病毒阳性", "预期结果": "阳性", "CY5规则": "≤38", "FAM规则": "Undetermined或≥42", "TexasRed规则": "Undetermined或≥42", "VIC规则": "≤38", "结果判读规则": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\";\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\";\"VIC通道Ct值\"为\"Ct≤38\";\"CY5通道Ct值\"为\"Ct≤38\""},
+        {"编号前缀": "R1", "参考品大类": "重复性参考品R1", "质量标准": "检测重复性参考品R1，重复检测10次，R1检测结果应均为甲型流感病毒阳性、乙型流感病毒阳性及新型冠状病毒阳性，且各重复性参考品检测结果Ct值的变异系数CV值均≤5%（内标通道无需进行统计）。", "预期结果": "阳性", "CY5规则": "无要求", "FAM规则": "≤38", "TexasRed规则": "≤38", "VIC规则": "≤38", "结果判读规则": "\"FAM通道Ct值\"为\"Ct≤38\";\"Texas Red通道Ct值\"为\"Ct≤38\";\"VIC通道Ct值\"为\"Ct≤38\";\"CY5通道Ct值\"为\"Ct≤38\""},
+        {"编号前缀": "R2", "参考品大类": "重复性参考品R2", "质量标准": "检测重复性参考品R2，重复检测10次，R2检测结果应均为甲型流感病毒阳性、乙型流感病毒阳性及新型冠状病毒阳性，且各重复性参考品检测结果Ct值的变异系数CV值均≤5%（内标通道无需进行统计）。", "预期结果": "阳性", "CY5规则": "无要求", "FAM规则": "≤38", "TexasRed规则": "≤38", "VIC规则": "≤38", "结果判读规则": "\"FAM通道Ct值\"为\"Ct≤38\";\"Texas Red通道Ct值\"为\"Ct≤38\";\"VIC通道Ct值\"为\"Ct≤38\";\"CY5通道Ct值\"为\"Ct≤38\""},
+        {"编号前缀": "R3", "参考品大类": "重复性参考品R3", "质量标准": "检测重复性参考品R3，重复检测10次，R3检测结果应为阴性。", "预期结果": "阴性", "CY5规则": "≤38", "FAM规则": "Undetermined或≥42", "TexasRed规则": "Undetermined或≥42", "VIC规则": "Undetermined或≥42", "结果判读规则": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\";\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\";\"VIC通道Ct值\"为\"Undetermined或Ct≥42\";\"CY5通道Ct值\"为\"Ct≤38\""},
+        {"编号前缀": "YANG", "参考品大类": "阳性质控品", "质量标准": "FAM、Texas Red、VIC检测通道均存在明显扩增曲线，且Ct 值≤32 ，CY5通道有或无扩增曲线", "预期结果": "阳性", "CY5规则": "无要求", "FAM规则": "≤38", "TexasRed规则": "≤38", "VIC规则": "≤38", "结果判读规则": "\"FAM通道Ct值\"为\"Ct≤38\";\"Texas Red通道Ct值\"为\"Ct≤38\";\"VIC通道Ct值\"为\"Ct≤38\""},
+        {"编号前缀": "YIN", "参考品大类": "阴性质控品", "质量标准": "为阴性，CY5通道存在明显扩增曲线，且Ct值≤38，其他通道无扩增曲线。", "预期结果": "阴性", "CY5规则": "≤38", "FAM规则": "Undetermined", "TexasRed规则": "Undetermined", "VIC规则": "Undetermined", "结果判读规则": "\"FAM通道Ct值\"为\"Undetermined\";\"Texas Red通道Ct值\"为\"Undetermined\";\"VIC通道Ct值\"为\"Undetermined\";\"CY5通道Ct值\"为\"Ct≤38\""},
+    ]
     return rules
-
-rules = load_rules()
 
 # ==================== 解析编号前缀函数 ====================
 def parse_range(prefix_str):
