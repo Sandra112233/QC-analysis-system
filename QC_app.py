@@ -19,7 +19,7 @@ init_db()
 @st.cache_data
 def load_rules():
     rules = []
-    with open("rules.csv", "r", encoding="utf-8") as f:
+    with open("rules.csv", "r", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         for row in reader:
             rules.append(row)
