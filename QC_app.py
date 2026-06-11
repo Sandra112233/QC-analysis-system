@@ -7,53 +7,107 @@ import io
 import re
 import os
 from datetime import datetime
+from copy import copy
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+from openpyxl.utils import get_column_letter
 from database import init_db, save_record, load_all_records, delete_records
 
-# ==================== 判读规则 ====================
-RULES_DATA = [
-    {"编号前缀": "N", "参考品大类": "阴性参考品", "质量标准": "均为阴性", "预期结果": "阴性",
-     "CY5规则": "≤38", "FAM规则": "Undetermined或≥42", "TexasRed规则": "Undetermined或≥42", "VIC规则": "Undetermined或≥42",
-     "结果判读规则": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\";\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\";\"VIC通道Ct值\"为\"Undetermined或Ct≥42\";\"CY5通道Ct值\"为\"Ct≤38\""},
-    {"编号前缀": "P1-P10", "参考品大类": "阳性参考品", "质量标准": "甲型流感病毒阳性", "预期结果": "阳性",
-     "CY5规则": "≤38", "FAM规则": "≤38", "TexasRed规则": "Undetermined或≥42", "VIC规则": "Undetermined或≥42",
-     "结果判读规则": "\"FAM通道Ct值\"为\"Ct≤38\";\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\";\"VIC通道Ct值\"为\"Undetermined或Ct≥42\";\"CY5通道Ct值\"为\"Ct≤38\""},
-    {"编号前缀": "P11-P14", "参考品大类": "阳性参考品", "质量标准": "乙型流感病毒阳性", "预期结果": "阳性",
-     "CY5规则": "≤38", "FAM规则": "Undetermined或≥42", "TexasRed规则": "≤38", "VIC规则": "Undetermined或≥42",
-     "结果判读规则": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\";\"Texas Red通道Ct值\"为\"Ct≤38\";\"VIC通道Ct值\"为\"Undetermined或Ct≥42\";\"CY5通道Ct值\"为\"Ct≤38\""},
-    {"编号前缀": "P15-P20", "参考品大类": "阳性参考品", "质量标准": "2019-nCoV新型冠状病毒阳性", "预期结果": "阳性",
-     "CY5规则": "≤38", "FAM规则": "Undetermined或≥42", "TexasRed规则": "Undetermined或≥42", "VIC规则": "≤38",
-     "结果判读规则": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\";\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\";\"VIC通道Ct值\"为\"Ct≤38\";\"CY5通道Ct值\"为\"Ct≤38\""},
-    {"编号前缀": "S1-S5", "参考品大类": "最低检出限参考品", "质量标准": "甲型流感病毒阳性", "预期结果": "阳性",
-     "CY5规则": "≤38", "FAM规则": "≤38", "TexasRed规则": "Undetermined或≥42", "VIC规则": "Undetermined或≥42",
-     "结果判读规则": "\"FAM通道Ct值\"为\"Ct≤38\";\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\";\"VIC通道Ct值\"为\"Undetermined或Ct≥42\";\"CY5通道Ct值\"为\"Ct≤38\""},
-    {"编号前缀": "S6-S7", "参考品大类": "最低检出限参考品", "质量标准": "乙型流感病毒阳性", "预期结果": "阳性",
-     "CY5规则": "≤38", "FAM规则": "Undetermined或≥42", "TexasRed规则": "≤38", "VIC规则": "Undetermined或≥42",
-     "结果判读规则": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\";\"Texas Red通道Ct值\"为\"Ct≤38\";\"VIC通道Ct值\"为\"Undetermined或Ct≥42\";\"CY5通道Ct值\"为\"Ct≤38\""},
-    {"编号前缀": "S8", "参考品大类": "最低检出限参考品", "质量标准": "2019-nCoV新型冠状病毒阳性", "预期结果": "阳性",
-     "CY5规则": "≤38", "FAM规则": "Undetermined或≥42", "TexasRed规则": "Undetermined或≥42", "VIC规则": "≤38",
-     "结果判读规则": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\";\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\";\"VIC通道Ct值\"为\"Ct≤38\";\"CY5通道Ct值\"为\"Ct≤38\""},
-    {"编号前缀": "R1", "参考品大类": "重复性参考品R1", "质量标准": "检测重复性参考品R1，重复检测10次，R1检测结果应均为阳性，且各重复性参考品检测结果Ct值的变异系数CV值均≤5%（内标通道无需进行统计）。", "预期结果": "阳性",
-     "CY5规则": "无要求", "FAM规则": "≤38", "TexasRed规则": "≤38", "VIC规则": "≤38",
-     "结果判读规则": "\"FAM通道Ct值\"为\"Ct≤38\";\"Texas Red通道Ct值\"为\"Ct≤38\";\"VIC通道Ct值\"为\"Ct≤38\";\"CY5通道Ct值\"为\"Ct≤38\""},
-    {"编号前缀": "R2", "参考品大类": "重复性参考品R2", "质量标准": "检测重复性参考品R2，重复检测10次，R2检测结果应均为阳性，且各重复性参考品检测结果Ct值的变异系数CV值均≤5%（内标通道无需进行统计）。", "预期结果": "阳性",
-     "CY5规则": "无要求", "FAM规则": "≤38", "TexasRed规则": "≤38", "VIC规则": "≤38",
-     "结果判读规则": "\"FAM通道Ct值\"为\"Ct≤38\";\"Texas Red通道Ct值\"为\"Ct≤38\";\"VIC通道Ct值\"为\"Ct≤38\";\"CY5通道Ct值\"为\"Ct≤38\""},
-    {"编号前缀": "R3", "参考品大类": "重复性参考品R3", "质量标准": "检测重复性参考品R3，重复检测10次，R3检测结果应为阴性。", "预期结果": "阴性",
-     "CY5规则": "≤38", "FAM规则": "Undetermined或≥42", "TexasRed规则": "Undetermined或≥42", "VIC规则": "Undetermined或≥42",
-     "结果判读规则": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\";\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\";\"VIC通道Ct值\"为\"Undetermined或Ct≥42\";\"CY5通道Ct值\"为\"Ct≤38\""},
-    {"编号前缀": "YANG", "参考品大类": "阳性质控品", "质量标准": "FAM、Texas Red、VIC检测通道均存在明显扩增曲线，且Ct 值≤32 ，CY5通道有或无扩增曲线", "预期结果": "阳性",
-     "CY5规则": "无要求", "FAM规则": "≤38", "TexasRed规则": "≤38", "VIC规则": "≤38",
-     "结果判读规则": "\"FAM通道Ct值\"为\"Ct≤38\";\"Texas Red通道Ct值\"为\"Ct≤38\";\"VIC通道Ct值\"为\"Ct≤38\""},
-    {"编号前缀": "YIN", "参考品大类": "阴性质控品", "质量标准": "为阴性，CY5通道存在明显扩增曲线，且Ct值≤38，其他通道无扩增曲线。", "预期结果": "阴性",
-     "CY5规则": "≤38", "FAM规则": "Undetermined", "TexasRed规则": "Undetermined", "VIC规则": "Undetermined",
-     "结果判读规则": "\"FAM通道Ct值\"为\"Undetermined\";\"Texas Red通道Ct值\"为\"Undetermined\";\"VIC通道Ct值\"为\"Undetermined\";\"CY5通道Ct值\"为\"Ct≤38\""},
-]
+# ==================== 项目规则配置 ====================
+PROJECT_CONFIGS = {
+    "新冠甲乙流": {
+        "channels": ["CY5", "FAM", "Texas Red", "VIC"],
+        "channel_labels": {
+            "CY5": "CY5通道Ct值\n（内标）",
+            "FAM": "FAM通道Ct值\n（甲流）",
+            "Texas Red": "Texas Red通道Ct值（乙流）",
+            "VIC": "VIC通道Ct值\n（新冠）"
+        },
+        "pathogens": [
+            {"name": "甲型流感病毒", "channel": "FAM", "threshold": 38},
+            {"name": "乙型流感病毒", "channel": "Texas Red", "threshold": 38},
+            {"name": "新冠病毒", "channel": "VIC", "threshold": 38},
+        ],
+        "use_prefix": True,
+        "reference_categories": {
+            "N": "阴性参考品",
+            "P": "阳性参考品",
+            "S": "最低检出限参考品",
+            "R1": "重复性参考品R1",
+            "R2": "重复性参考品R2",
+            "R3": "重复性参考品R3",
+            "YANG": "阳性质控品",
+            "YIN": "阴性质控品"
+        }
+    },
+    "通用": {
+        "channels": ["CY5", "FAM", "Texas Red", "VIC"],
+        "channel_labels": {
+            "CY5": "CY5通道Ct值\n（内标）",
+            "FAM": "FAM通道Ct值",
+            "Texas Red": "Texas Red通道Ct值",
+            "VIC": "VIC通道Ct值"
+        },
+        "pathogens": [
+            {"name": "", "channel": "FAM", "threshold": 38},
+            {"name": "", "channel": "Texas Red", "threshold": 38},
+            {"name": "", "channel": "VIC", "threshold": 38},
+        ],
+        "use_prefix": False,
+        "reference_categories": {
+            "N": "阴性参考品",
+            "P": "阳性参考品",
+            "S": "最低检出限参考品",
+            "R1": "重复性参考品R1",
+            "R2": "重复性参考品R2",
+            "R3": "重复性参考品R3",
+            "YANG": "阳性质控品",
+            "YIN": "阴性质控品"
+        }
+    }
+}
+
+# ==================== 判读规则（每个参考品类型的通道规则） ====================
+JUDGE_RULES = {
+    "N": {"CY5": "≤38", "FAM": "Undetermined或≥42", "TexasRed": "Undetermined或≥42", "VIC": "Undetermined或≥42", "expected": "阴性"},
+    "P1-P10": {"CY5": "≤38", "FAM": "≤38", "TexasRed": "Undetermined或≥42", "VIC": "Undetermined或≥42", "expected": "阳性"},
+    "P11-P14": {"CY5": "≤38", "FAM": "Undetermined或≥42", "TexasRed": "≤38", "VIC": "Undetermined或≥42", "expected": "阳性"},
+    "P15-P20": {"CY5": "≤38", "FAM": "Undetermined或≥42", "TexasRed": "Undetermined或≥42", "VIC": "≤38", "expected": "阳性"},
+    "S1-S5": {"CY5": "≤38", "FAM": "≤38", "TexasRed": "Undetermined或≥42", "VIC": "Undetermined或≥42", "expected": "阳性"},
+    "S6-S7": {"CY5": "≤38", "FAM": "Undetermined或≥42", "TexasRed": "≤38", "VIC": "Undetermined或≥42", "expected": "阳性"},
+    "S8": {"CY5": "≤38", "FAM": "Undetermined或≥42", "TexasRed": "Undetermined或≥42", "VIC": "≤38", "expected": "阳性"},
+    "R1": {"CY5": "无要求", "FAM": "≤38", "TexasRed": "≤38", "VIC": "≤38", "expected": "阳性"},
+    "R2": {"CY5": "无要求", "FAM": "≤38", "TexasRed": "≤38", "VIC": "≤38", "expected": "阳性"},
+    "R3": {"CY5": "≤38", "FAM": "Undetermined或≥42", "TexasRed": "Undetermined或≥42", "VIC": "Undetermined或≥42", "expected": "阴性"},
+    "YANG": {"CY5": "无要求", "FAM": "≤38", "TexasRed": "≤38", "VIC": "≤38", "expected": "阳性"},
+    "YIN": {"CY5": "≤38", "FAM": "Undetermined", "TexasRed": "Undetermined", "VIC": "Undetermined", "expected": "阴性"},
+}
+
+# 质量标准文字
+QUALITY_STANDARDS = {
+    "N": "均为阴性",
+    "P1-P10": "甲型流感病毒阳性",
+    "P11-P14": "乙型流感病毒阳性",
+    "P15-P20": "2019-nCoV新型冠状病毒阳性",
+    "S1-S5": "甲型流感病毒阳性",
+    "S6-S7": "乙型流感病毒阳性",
+    "S8": "2019-nCoV新型冠状病毒阳性",
+    "R1": "检测重复性参考品R1，重复检测10次，R1检测结果应均为阳性，且各重复性参考品检测结果Ct值的变异系数CV值均≤5%（内标通道无需进行统计）。",
+    "R2": "检测重复性参考品R2，重复检测10次，R2检测结果应均为阳性，且各重复性参考品检测结果Ct值的变异系数CV值均≤5%（内标通道无需进行统计）。",
+    "R3": "检测重复性参考品R3，重复检测10次，R3检测结果应为阴性。",
+    "YANG": "FAM、Texas Red、VIC检测通道均存在明显扩增曲线，且Ct值≤32，CY5通道有或无扩增曲线",
+    "YIN": "为阴性，CY5通道存在明显扩增曲线，且Ct值≤38，其他通道无扩增曲线。",
+}
 
 # ==================== 页面设置 ====================
 st.set_page_config(page_title="QC数据智能分析系统", layout="wide")
 st.title("QC数据智能分析系统")
 
 init_db()
+
+# ==================== 项目选择 ====================
+project_name = st.selectbox("选择项目", list(PROJECT_CONFIGS.keys()))
+config = PROJECT_CONFIGS[project_name]
 
 # ==================== 函数 ====================
 def parse_range(prefix_str):
@@ -74,9 +128,9 @@ def parse_range(prefix_str):
             result.append(part)
     return result
 
-def match_rule(sample_name):
-    for rule in RULES_DATA:
-        prefixes = parse_range(rule["编号前缀"])
+def match_judge_rule(sample_name):
+    for key, rule in JUDGE_RULES.items():
+        prefixes = parse_range(key)
         if sample_name in prefixes:
             return rule
     return None
@@ -102,34 +156,94 @@ def check_channel(value, rule_str):
         return ct_val >= threshold
     return False
 
-def do_judge(row_data, channels, rule):
-    all_pass = True
-    for ch in channels:
-        value = row_data.get(f"{ch}通道Ct值", "Undetermined")
-        rule_str = rule.get(f"{ch}规则", "")
-        if not check_channel(value, rule_str):
-            all_pass = False
-            break
-    expected = rule.get("预期结果", "")
-    result = expected if all_pass else "不符合"
-    verdict = "符合规定" if result == expected else "不符合规定"
-    
-    # 动态生成判读规则文字（只显示实际存在的通道）
-    channel_names = {
-        "CY5": "CY5通道Ct值",
-        "FAM": "FAM通道Ct值",
-        "TexasRed": "Texas Red通道Ct值",
-        "VIC": "VIC通道Ct值"
-    }
-    rule_parts = []
-    for ch in channels:
-        ch_name = channel_names.get(ch, f"{ch}通道Ct值")
-        ch_rule = rule.get(f"{ch}规则", "")
-        if ch_rule and ch_rule != "无要求":
-            rule_parts.append(f'"{ch_name}"为"{ch_rule}"')
-    rule_text = ";".join(rule_parts)
-    
-    return result, verdict, rule_text
+def do_judge(row_data, channels, judge_rule):
+    # 第一步：检查无效
+    cy5_val = row_data.get("CY5通道Ct值", "Undetermined")
+    if cy5_val == "Undetermined" or (isinstance(cy5_val, (int, float)) and cy5_val > 38):
+        return "无效", "不符合规定", "CY5通道Ct值为Undetermined或Ct>38，结果无效。"
+
+    # 第二步：按病原优先级判读
+    pathogens = config["pathogens"]
+    for pathogen in pathogens:
+        ch = pathogen["channel"]
+        if ch not in channels:
+            continue
+        ch_val = row_data.get(f"{ch}通道Ct值", "Undetermined")
+        try:
+            ch_ct = float(ch_val)
+            if ch_ct <= pathogen["threshold"]:
+                if config["use_prefix"]:
+                    result_name = f"{pathogen['name']}阳性"
+                else:
+                    result_name = "阳性"
+                # 生成规则文字
+                rule_parts = []
+                for c in channels:
+                    label = config["channel_labels"].get(c, c)
+                    r_str = judge_rule.get(c, "") if judge_rule else ""
+                    if r_str and r_str != "无要求":
+                        rule_parts.append(f'"{label.replace(chr(10), "")}"为"{r_str}"')
+                rule_text = ";".join(rule_parts)
+                return result_name, "符合规定", rule_text
+        except (ValueError, TypeError):
+            pass
+
+    # 第三步：判阴性
+    # 所有病毒通道都是 Undetermined 或 ≥42
+    all_negative = True
+    for pathogen in pathogens:
+        ch = pathogen["channel"]
+        if ch not in channels:
+            continue
+        ch_val = row_data.get(f"{ch}通道Ct值", "Undetermined")
+        if ch_val == "Undetermined":
+            continue
+        try:
+            ch_ct = float(ch_val)
+            if ch_ct < 42:
+                all_negative = False
+                break
+        except (ValueError, TypeError):
+            pass
+
+    if all_negative:
+        rule_parts = []
+        for c in channels:
+            label = config["channel_labels"].get(c, c)
+            r_str = judge_rule.get(c, "") if judge_rule else ""
+            if r_str and r_str != "无要求":
+                rule_parts.append(f'"{label.replace(chr(10), "")}"为"{r_str}"')
+        rule_text = ";".join(rule_parts)
+        return "阴性", "符合规定", rule_text
+
+    return "不符合", "不符合规定", ""
+
+def get_category(sample_name):
+    s = str(sample_name)
+    for prefix, cat in config["reference_categories"].items():
+        if s.startswith(prefix):
+            # R1/R2/R3 特殊处理
+            if prefix in ["R1", "R2", "R3"]:
+                if s == prefix or re.match(rf"^{prefix}\d", s):
+                    continue
+                return cat
+            return cat
+    # 更细致的匹配
+    if s.startswith("R1"):
+        return config["reference_categories"].get("R1", "重复性参考品R1")
+    if s.startswith("R2"):
+        return config["reference_categories"].get("R2", "重复性参考品R2")
+    if s.startswith("R3"):
+        return config["reference_categories"].get("R3", "重复性参考品R3")
+    return ""
+
+def get_quality(sample_name):
+    s = str(sample_name)
+    for key, quality in QUALITY_STANDARDS.items():
+        prefixes = parse_range(key)
+        if s in prefixes:
+            return quality
+    return ""
 
 # ==================== 侧边栏 ====================
 st.sidebar.header("📋 基本信息")
@@ -138,6 +252,7 @@ batch_no = st.sidebar.text_input("批号", value="")
 spec = st.sidebar.text_input("规格", value="")
 inspector = st.sidebar.text_input("检验人", value="")
 inspection_date = st.sidebar.date_input("检验日期", value=datetime.now().date())
+ref_batch = st.sidebar.text_input("企业参考品批号", value="")
 
 # ==================== 主区域 ====================
 tab1, tab2 = st.tabs(["📤 上传数据 & 生成模板一", "📂 历史记录"])
@@ -187,10 +302,9 @@ with tab1:
         st.subheader("📊 原始数据预览")
         st.dataframe(df_raw, use_container_width=True)
 
-        # 提取数据中实际存在的通道
+        # 提取通道
         available_targets = df_raw["Target Name"].dropna().unique().tolist()
-        all_known_targets = ["CY5", "FAM", "Texas Red", "VIC"]
-        channels = [t for t in all_known_targets if t in available_targets]
+        channels = [t for t in config["channels"] if t in available_targets]
 
         # 提取样本并排序
         samples_raw = df_raw["Sample Name"].dropna().unique().tolist()
@@ -211,24 +325,22 @@ with tab1:
         # 构建模板一
         template_data = []
         current_category = ""
-        current_quality = ""
 
         for sample in samples:
-            rule = match_rule(str(sample))
-            if rule is None:
-                category = ""
-                quality = ""
-            else:
-                category = rule["参考品大类"]
-                quality = rule["质量标准"]
+            category = get_category(str(sample))
+            quality = get_quality(str(sample))
+            judge_rule = match_judge_rule(str(sample))
 
             display_category = category if category != current_category else ""
             display_quality = quality if category != current_category else ""
             if category != current_category:
                 current_category = category
-                current_quality = quality
 
-            row_data = {"参考品大类": display_category, "编号": sample, "质量标准": display_quality}
+            row_data = {
+                "参考品": display_category,
+                "编号": sample,
+                "质量标准": display_quality,
+            }
 
             sample_rows = df_raw[df_raw["Sample Name"] == sample]
             for ch in channels:
@@ -243,15 +355,11 @@ with tab1:
                 else:
                     row_data[f"{ch}通道Ct值"] = "Undetermined"
 
-            if rule:
-                result, verdict, rule_text = do_judge(row_data, channels, rule)
-                row_data["检测结果"] = result
-                row_data["结果判读"] = verdict
-                row_data["结果判读规则"] = rule_text
-            else:
-                row_data["检测结果"] = ""
-                row_data["结果判读"] = ""
-                row_data["结果判读规则"] = ""
+            # 判读
+            result, verdict, rule_text = do_judge(row_data, channels, judge_rule)
+            row_data["检测结果"] = result
+            row_data["结果判读"] = verdict
+            row_data["结果判读规则"] = rule_text
 
             template_data.append(row_data)
 
@@ -259,9 +367,9 @@ with tab1:
         for prefix in ["R1", "R2"]:
             r_rows = [r for r in template_data if str(r["编号"]) == prefix]
             if len(r_rows) >= 2:
-                avg_row = {"参考品大类": "", "编号": "平均值", "质量标准": "/"}
-                std_row = {"参考品大类": "", "编号": "标准偏差", "质量标准": "/"}
-                cv_row = {"参考品大类": "", "编号": "变异系数（CV值）", "质量标准": "/"}
+                avg_row = {"参考品": "", "编号": "平均值", "质量标准": "/"}
+                std_row = {"参考品": "", "编号": "标准偏差", "质量标准": "/"}
+                cv_row = {"参考品": "", "编号": "变异系数（CV值）", "质量标准": "/"}
                 cv_values = {}
                 for ch in channels:
                     vals = []
@@ -295,15 +403,94 @@ with tab1:
                 template_data.append(std_row)
                 template_data.append(cv_row)
 
+        # 构建最终列顺序
+        final_columns = ["参考品", "编号", "质量标准"]
+        for ch in channels:
+            final_columns.append(config["channel_labels"].get(ch, f"{ch}通道Ct值"))
+        final_columns += ["检测结果", "结果判读", "结果判读规则"]
+
         df_template = pd.DataFrame(template_data)
+        # 重命名列
+        rename_map = {}
+        for ch in channels:
+            rename_map[f"{ch}通道Ct值"] = config["channel_labels"].get(ch, f"{ch}通道Ct值")
+        df_template = df_template.rename(columns=rename_map)
+        # 确保列顺序
+        existing_cols = [c for c in final_columns if c in df_template.columns]
+        df_template = df_template[existing_cols]
 
         st.subheader("📋 模板一预览")
         st.dataframe(df_template, use_container_width=True)
 
-        # 下载
+        # 下载 Excel（含合并单元格）
         output = io.BytesIO()
-        with pd.ExcelWriter(output, engine="openpyxl") as writer:
-            df_template.to_excel(writer, sheet_name="原始记录附页", index=False)
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "原始记录附页"
+
+        # 写入公共字段标题行
+        public_fields = ["日期", "企业参考品批号", "成品批号", "规格"]
+        for i, field in enumerate(public_fields):
+            ws.cell(row=1, column=i+1, value=field)
+
+        # 空行
+        ws.cell(row=2, column=1, value="")
+
+        # 写入数据表头（从第3行开始）
+        thin_border = Border(
+            left=Side(style='thin'), right=Side(style='thin'),
+            top=Side(style='thin'), bottom=Side(style='thin')
+        )
+        header_font = Font(bold=True, size=10)
+        header_fill = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
+
+        for j, col_name in enumerate(existing_cols):
+            cell = ws.cell(row=3, column=j+1, value=col_name)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.border = thin_border
+            cell.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+
+        # 写入数据（从第4行开始）
+        data_font = Font(size=10)
+        for i, row_data in enumerate(template_data):
+            row_num = 4 + i
+            for j, col_name in enumerate(existing_cols):
+                # 反查原始key
+                orig_key = col_name
+                for ch in channels:
+                    if config["channel_labels"].get(ch) == col_name:
+                        orig_key = f"{ch}通道Ct值"
+                        break
+                value = row_data.get(orig_key, row_data.get(col_name, ""))
+                cell = ws.cell(row=row_num, column=j+1, value=value)
+                cell.font = data_font
+                cell.border = thin_border
+                cell.alignment = Alignment(horizontal='center', vertical='center')
+
+        # 合并参考品列
+        merge_ranges = []
+        start_row = 4
+        prev_cat = None
+        for i, row_data in enumerate(template_data):
+            cat = row_data.get("参考品", "")
+            if cat != "" and cat is not None:
+                if prev_cat is not None and start_row < 4 + i - 1:
+                    merge_ranges.append((start_row, 4 + i - 1))
+                start_row = 4 + i
+                prev_cat = cat
+        if prev_cat is not None and start_row < 4 + len(template_data) - 1:
+            merge_ranges.append((start_row, 4 + len(template_data) - 1))
+
+        for start, end in merge_ranges:
+            if end > start:
+                ws.merge_cells(start_row=start, start_column=1, end_row=end, end_column=1)
+
+        # 调整列宽
+        for j, col_name in enumerate(existing_cols):
+            ws.column_dimensions[get_column_letter(j+1)].width = max(15, len(str(col_name))*2)
+
+        wb.save(output)
         output.seek(0)
 
         st.download_button(
@@ -321,7 +508,7 @@ with tab1:
                 "spec": spec,
                 "inspector": inspector,
                 "inspection_date": str(inspection_date),
-                "data": {"template_data": template_data, "channels": channels}
+                "data": {"template_data": template_data, "channels": channels, "project": project_name}
             }
             save_record(record)
             st.success("✅ 已保存到历史记录！")
