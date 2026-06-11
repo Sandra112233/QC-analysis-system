@@ -158,8 +158,26 @@ with tab1:
         known_targets = ["CY5", "FAM", "Texas Red", "VIC"]
         channels = [t for t in known_targets if t in available_targets]
 
-        samples = df_raw["Sample Name"].dropna().unique().tolist()
-        samples = [s for s in samples if str(s).strip() != ""]
+                # 提取样本并排序
+        samples_raw = df_raw["Sample Name"].dropna().unique().tolist()
+        samples_raw = [s for s in samples_raw if str(s).strip() != ""]
+
+        # 定义排序规则：按模板顺序
+        category_order = {
+            "N": 1, "P": 2, "S": 3, "R": 4, "YANG": 5, "YIN": 6
+        }
+        def sort_key(sample):
+            s = str(sample)
+            # 先按类别排序
+            for prefix, order in category_order.items():
+                if s.startswith(prefix):
+                    # 同类别内按数字排序
+                    nums = re.findall(r"\d+", s)
+                    num = int(nums[0]) if nums else 0
+                    return (order, num)
+            return (99, 0)
+
+        samples = sorted(samples_raw, key=sort_key)
 
         template_data = []
         current_category = ""
