@@ -363,8 +363,8 @@ with tab1:
 
             template_data.append(row_data)
 
-        # R1/R2 统计行
-        for prefix in ["R1", "R2"]:
+        # R1/R2/R3 统计行
+        for prefix in ["R1", "R2", "R3"]:
             r_rows = [r for r in template_data if str(r["编号"]) == prefix]
             if len(r_rows) >= 2:
                 avg_row = {"参考品": "", "编号": "平均值", "质量标准": "/"}
@@ -396,12 +396,16 @@ with tab1:
                 std_row["结果判读"] = "/"
                 std_row["结果判读规则"] = ""
                 cv_row["检测结果"] = "/"
-                cv_ok = all(isinstance(cv_values.get(ch), (int, float)) and cv_values.get(ch) <= 5 for ch in channels)
-                cv_row["结果判读"] = "符合规定" if cv_ok else ""
-                cv_row["结果判读规则"] = '数值小于等于"5"'
+                if prefix == "R3":
+                    cv_row["结果判读"] = ""
+                    cv_row["结果判读规则"] = ""
+                else:
+                    cv_ok = all(isinstance(cv_values.get(ch), (int, float)) and cv_values.get(ch) <= 5 for ch in channels)
+                    cv_row["结果判读"] = "符合规定" if cv_ok else ""
+                    cv_row["结果判读规则"] = '数值小于等于"5"'
                 template_data.append(avg_row)
                 template_data.append(std_row)
-                template_data.append(cv_row)
+                template_data.append(cv_row) 
 
         # 构建最终列顺序
         final_columns = ["参考品", "编号", "质量标准"]
