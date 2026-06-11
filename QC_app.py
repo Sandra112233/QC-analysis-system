@@ -113,7 +113,22 @@ def do_judge(row_data, channels, rule):
     expected = rule.get("预期结果", "")
     result = expected if all_pass else "不符合"
     verdict = "符合规定" if result == expected else "不符合规定"
-    rule_text = rule.get("结果判读规则", "")
+    
+    # 动态生成判读规则文字（只显示实际存在的通道）
+    channel_names = {
+        "CY5": "CY5通道Ct值",
+        "FAM": "FAM通道Ct值",
+        "TexasRed": "Texas Red通道Ct值",
+        "VIC": "VIC通道Ct值"
+    }
+    rule_parts = []
+    for ch in channels:
+        ch_name = channel_names.get(ch, f"{ch}通道Ct值")
+        ch_rule = rule.get(f"{ch}规则", "")
+        if ch_rule and ch_rule != "无要求":
+            rule_parts.append(f'"{ch_name}"为"{ch_rule}"')
+    rule_text = ";".join(rule_parts)
+    
     return result, verdict, rule_text
 
 # ==================== 侧边栏 ====================
