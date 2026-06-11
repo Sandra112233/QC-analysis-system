@@ -31,7 +31,8 @@ with tab1:
 
     if uploaded_file is not None:
         df_raw = pd.read_excel(uploaded_file)
-
+        st.write("列名：", list(df_raw.columns))
+        
         st.subheader("📊 原始数据预览")
         st.dataframe(df_raw, use_container_width=True)
 
