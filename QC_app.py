@@ -30,11 +30,16 @@ with tab1:
     uploaded_file = st.file_uploader("选择仪器导出的 .xls 文件", type=["xls", "xlsx"])
 
     if uploaded_file is not None:
-        df_raw = pd.read_excel(uploaded_file)
-        st.write("列名：", list(df_raw.columns))
-        
+        df_raw = pd.read_excel(uploaded_file, header=6)
+
         st.subheader("📊 原始数据预览")
         st.dataframe(df_raw, use_container_width=True)
+
+        # 去掉可能的空行
+        df_raw = df_raw.dropna(subset=["Sample Name", "Target Name"], how="all")
+
+        # 统一列名（处理可能的空格差异）
+        df_raw.columns = df_raw.columns.str.strip()
 
         # 找出数据中所有通道
         available_targets = df_raw["Target Name"].dropna().unique().tolist()
@@ -55,10 +60,13 @@ with tab1:
             for ch in channels:
                 ch_row = sample_rows[sample_rows["Target Name"] == ch]
                 if len(ch_row) > 0:
-                    try:
-                        ct_val = ch_row["Cт"].values[0]
-                    except KeyError:
-                        ct_val = ch_row["Ct"].values[0]
+                    # 取Ct值，仪器列名可能是 Ct 或 Cт
+                    for col_name in ["Cт", "Ct", "CT"]:
+                        if col_name in ch_row.columns:
+                            ct_val = ch_row[col_name].values[0]
+                            break
+                    else:
+                        ct_val = "Undetermined"
                     try:
                         ct_val = round(float(ct_val), 2)
                     except (ValueError, TypeError):
@@ -70,6 +78,7 @@ with tab1:
             row_data["检测结果"] = ""
             row_data["结果判读"] = ""
             template_data.append(row_data)
+
 
         df_template = pd.DataFrame(template_data)
 
