@@ -407,56 +407,59 @@ with tab1:
 
         # 提取通道（严格按数据中实际存在的Target Name）
         available_targets = df_raw["Target Name"].dropna().unique().tolist()
-        # 去空格统一
         available_targets_clean = [t.strip() for t in available_targets]
         channels = [t for t in config["channels"] if t in available_targets_clean]
 
-        # 提取所有样本行（不去重！保留R1/R2/R3的每一行）
-        all_samples = df_raw["Sample Name"].dropna().tolist()
-        all_samples = [s for s in all_samples if str(s).strip() != ""]
+        # 提取样本列表
+        # N/P/S/YANG/YIN 去重（每行合并通道），R1/R2/R3 保留所有重复（每次独立检测）
+        all_samples_raw = df_raw["Sample Name"].dropna().tolist()
+        all_samples_raw = [str(s).strip() for s in all_samples_raw if str(s).strip() != ""]
 
-        # 排序：按类别，同类按出现顺序
-        category_order = {"N": 1, "P": 2, "S": 3, "R": 4, "YANG": 5, "YIN": 6}
-        # 获取每个样本的唯一列表用于确定分类顺序
-        unique_samples = list(dict.fromkeys(all_samples))  # 保持顺序去重
-        sample_categories = {}
+        # 分离 R 和非 R
+        r_samples = [s for s in all_samples_raw if s.startswith("R")]
+        non_r_samples = [s for s in all_samples_raw if not s.startswith("R")]
+        non_r_unique = list(dict.fromkeys(non_r_samples))
+
+        # 合并：非R去重 + R保留全部
+        unique_samples = non_r_unique + r_samples
+
+        # 再去重保留顺序
+        seen = set()
+        unique_samples_ordered = []
         for s in unique_samples:
-            cat = get_category(str(s))
+            # R样本不去重，非R去重
+            if s.startswith("R"):
+                unique_samples_ordered.append(s)
+            elif s not in seen:
+                unique_samples_ordered.append(s)
+                seen.add(s)
+
+        # 排序
+        category_order = {"N": 1, "P": 2, "S": 3, "R": 4, "YANG": 5, "YIN": 6}
+        def sort_key(sample):
+            s = str(sample)
             for prefix, order in category_order.items():
-                if str(s).startswith(prefix):
-                    sample_categories[str(s)] = (order, str(s))
-                    break
-            else:
-                sample_categories[str(s)] = (99, str(s))
+                if s.startswith(prefix):
+                    nums = re.findall(r"\d+", s)
+                    num = int(nums[0]) if nums else 0
+                    return (order, num)
+            return (99, 0)
 
-        # 重新排列所有行：同一编号的放在一起，按类别排序
-        def row_sort_key(sample_name):
-            s = str(sample_name)
-            return sample_categories.get(s, (99, s))
-
-        all_samples_sorted = sorted(all_samples, key=row_sort_key)
+        samples = sorted(unique_samples_ordered, key=sort_key)
 
         # 构建模板一
         template_data = []
         current_category = ""
-        prev_sample = None
 
-        for sample in all_samples_sorted:
+        for sample in samples:
             category = get_category(str(sample))
             quality = get_quality(str(sample))
             judge_rule = match_judge_rule(str(sample))
 
-            # 同一编号的后续行不重复显示分类和质量标准
-            if str(sample) == str(prev_sample):
-                display_category = ""
-                display_quality = ""
-            elif category != current_category:
-                display_category = category
-                display_quality = quality
+            display_category = category if category != current_category else ""
+            display_quality = quality if category != current_category else ""
+            if category != current_category:
                 current_category = category
-            else:
-                display_category = category
-                display_quality = quality
 
             row_data = {
                 "参考品": display_category,
@@ -464,9 +467,9 @@ with tab1:
                 "质量标准": display_quality,
             }
 
-            sample_rows = df_raw[df_raw["Sample Name"] == sample]
+            sample_rows = df_raw[df_raw["Sample Name"].astype(str).str.strip() == str(sample)]
             for ch in channels:
-                ch_row = sample_rows[sample_rows["Target Name"].str.strip() == ch]
+                ch_row = sample_rows[sample_rows["Target Name"].astype(str).str.strip() == ch]
                 if len(ch_row) > 0:
                     ct_val = ch_row[ct_col].values[0]
                     try:
@@ -489,11 +492,10 @@ with tab1:
                 row_data["结果判读规则"] = ""
 
             template_data.append(row_data)
-            prev_sample = sample
 
         # R1/R2/R3 统计行
         for prefix in ["R1", "R2", "R3"]:
-            r_rows = [r for r in template_data if str(r["编号"]).startswith(prefix) and str(r["编号"]) == prefix]
+            r_rows = [r for r in template_data if str(r["编号"]) == prefix]
             if len(r_rows) >= 2:
                 avg_row = {"参考品": "", "编号": "平均值", "质量标准": "/"}
                 std_row = {"参考品": "", "编号": "标准偏差", "质量标准": "/"}
@@ -642,7 +644,6 @@ with tab1:
             save_record(record)
             st.success("✅ 已保存到历史记录！")
             st.rerun()
-
 # ==================== 历史记录 ====================
 with tab2:
     st.subheader("📂 历史记录")
