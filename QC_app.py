@@ -724,78 +724,60 @@ with tab1:
         
 
         # ==================== 手动精确合并 ====================
-        # 根据 template_data 自动计算每组的起止行
-        # 按顺序遍历，识别分组边界
+        # 按 template_data 的顺序，识别每个分组的起止行
+        group_info = {}  # prefix -> {"start": row, "end": row, "name": cat_name}
+        current_prefix = None
         
-        # 先建立每个样本的Excel行号映射
-        sample_rows = {}  # sample -> [row_numbers]
         for i, row in enumerate(template_data):
             sample = str(row.get("编号", ""))
             r = data_start_row + i
-            if sample not in sample_rows:
-                sample_rows[sample] = []
-            sample_rows[sample].append(r)
-
-        # 定义分组顺序
-        group_order = [
-            ("N", "阴性参考品"),
-            ("P", "阳性参考品"),
-            ("S", "最低检出限参考品"),
-            ("R1", "重复性参考品R1"),
-            ("R2", "重复性参考品R2"),
-            ("R3", "重复性参考品R3"),
-            ("YANG", "ABnC阳性质控品"),
-            ("YIN", "ABnC阴性质控品"),
-        ]
-
-        # 收集每个分组的数据行和统计行
-        for prefix, cat_name in group_order:
-            # 找该分组所有数据行
-            data_rows = []
-            stat_rows_list = []
-            in_group = False
-            for i, row in enumerate(template_data):
-                sample = str(row.get("编号", ""))
-                if sample.startswith(prefix) and not sample.startswith(prefix + "0") if len(prefix) == 2 else sample.startswith(prefix):
-                    if prefix in ["R1", "R2", "R3"]:
-                        if sample == prefix:
-                            data_rows.append(data_start_row + i)
-                    else:
-                        data_rows.append(data_start_row + i)
-                    in_group = True
-                elif in_group and sample in ["平均值", "标准偏差", "变异系数（CV值）"]:
-                    # 判断是否属于当前分组
-                    prev = str(template_data[i-1].get("编号", "")) if i > 0 else ""
-                    if prev.startswith(prefix):
-                        stat_rows_list.append(data_start_row + i)
-                else:
-                    if in_group and sample.startswith("R") and not sample.startswith(prefix):
-                        in_group = False
-
-            if data_rows:
-                s = data_rows[0]
-                e = stat_rows_list[-1] if stat_rows_list else data_rows[-1]
-                if e > s:
-                    # 合并参考品列
-                    ws.merge_cells(start_row=s, start_column=1, end_row=e, end_column=1)
-                    ws.cell(row=s, column=1).value = cat_name
-                    ws.cell(row=s, column=1).font = data_font
-                    ws.cell(row=s, column=1).alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-
-                    # 合并质量标准列（R组含统计行）
-                    if prefix in ["R1", "R2", "R3"]:
-                        ws.merge_cells(start_row=s, start_column=3, end_row=e, end_column=3)
-
-                    # 合并结果判读规则列
-                    if rule_col_idx:
-                        ws.merge_cells(start_row=s, start_column=rule_col_idx, end_row=e, end_column=rule_col_idx)
-
+            
+            # 识别新分组开始
+            cat = row.get("参考品", "")
+            if cat != "" and cat is not None:
+                # 从参考品名称反推prefix
+                for prefix, cat_name in [
+                    ("N", "阴性参考品"), ("P", "阳性参考品"), ("S", "最低检出限参考品"),
+                    ("R1", "重复性参考品R1"), ("R2", "重复性参考品R2"), ("R3", "重复性参考品R3"),
+                    ("YANG", "ABnC阳性质控品"), ("YIN", "ABnC阴性质控品")
+                ]:
+                    if cat == cat_name:
+                        if current_prefix and current_prefix in group_info:
+                            group_info[current_prefix]["end"] = data_start_row + i - 1
+                        current_prefix = prefix
+                        group_info[current_prefix] = {"start": r, "end": r, "name": cat_name}
+                        break
+        
+        # 最后一个分组结束行
+        if current_prefix and current_prefix in group_info:
+            group_info[current_prefix]["end"] = data_start_row + len(template_data) - 1
+        
+        # 执行合并
+        for prefix, info in group_info.items():
+            s = info["start"]
+            e = info["end"]
+            if e > s:
+                # 合并参考品列
+                ws.merge_cells(start_row=s, start_column=1, end_row=e, end_column=1)
+                ws.cell(row=s, column=1).value = info["name"]
+                ws.cell(row=s, column=1).font = data_font
+                ws.cell(row=s, column=1).alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+                
+                # 合并质量标准列（R组）
+                if prefix in ["R1", "R2", "R3"]:
+                    ws.merge_cells(start_row=s, start_column=3, end_row=e, end_column=3)
+                
+                # 合并结果判读规则列
+                if rule_col_idx:
+                    ws.merge_cells(start_row=s, start_column=rule_col_idx, end_row=e, end_column=rule_col_idx)
+        
         # 统计行横向合并编号+质量标准
         for i, row in enumerate(template_data):
             if str(row["编号"]) in ["平均值", "标准偏差", "变异系数（CV值）"]:
                 r = data_start_row + i
                 ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=3)
                 ws.cell(row=r, column=2).alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
         for j, col_name in enumerate(existing_cols):
             ws.column_dimensions[get_column_letter(j+1)].width = max(20, len(str(col_name))*2.5)
 
