@@ -231,10 +231,17 @@ def parse_range(prefix_str):
 
 def match_judge_rule(sample_name):
     judge_rules = config.get("judge_rules", {})
+    s = str(sample_name)
     for key, rule in judge_rules.items():
-        prefixes = parse_range(key)
-        if sample_name in prefixes:
-            return rule
+        # 纯字母前缀（如 N, YANG, YIN, R1, R2, R3）：用 startswith 匹配
+        if re.match(r"^[A-Za-z]+\d*$", key):
+            if s.startswith(key):
+                return rule
+        else:
+            # 范围格式（如 P1-P10）：解析后精确匹配
+            prefixes = parse_range(key)
+            if s in prefixes:
+                return rule
     return None
 
 def check_channel(value, rule_str):
@@ -632,6 +639,13 @@ with tab1:
         for start, end in merge_ranges_col3:
             if end > start:
                 ws.merge_cells(start_row=start, start_column=3, end_row=end, end_column=3)
+        # 结果判读规则列也合并
+        rule_col_idx = existing_cols.index("结果判读规则") + 1 if "结果判读规则" in existing_cols else None
+        if rule_col_idx:
+            for start, end in merge_ranges_col1:
+                if end > start:
+                    ws.merge_cells(start_row=start, start_column=rule_col_idx, end_row=end, end_column=rule_col_idx)
+
 
         for j, col_name in enumerate(existing_cols):
             ws.column_dimensions[get_column_letter(j+1)].width = max(15, len(str(col_name))*2)
