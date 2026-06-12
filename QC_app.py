@@ -624,11 +624,7 @@ with tab1:
         ws = wb.active
         ws.title = "原始记录附页"
 
-        public_fields = ["日期", "企业参考品批号", "成品批号", "规格"]
-        for i, field in enumerate(public_fields):
-            ws.cell(row=1, column=i+1, value=field)
-        ws.cell(row=2, column=1, value="")
-
+        # 样式定义
         thin_border = Border(
             left=Side(style='thin'), right=Side(style='thin'),
             top=Side(style='thin'), bottom=Side(style='thin')
@@ -636,20 +632,61 @@ with tab1:
         header_font = Font(bold=True, size=10)
         header_fill = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
         red_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+        data_font = Font(size=10)
+        result_col_idx = existing_cols.index("结果判读") + 1 if "结果判读" in existing_cols else None
+        rule_col_idx = existing_cols.index("结果判读规则") + 1 if "结果判读规则" in existing_cols else None
 
+        # ==================== Excel 顶部信息行 ====================
+        # 第1行：日期（占参考品+编号2列，后面全部合并）
+        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=2)
+        ws.cell(row=1, column=1, value="日期").font = Font(bold=True, size=10)
+        ws.cell(row=1, column=1).alignment = Alignment(horizontal='center', vertical='center')
+        if len(existing_cols) > 2:
+            ws.merge_cells(start_row=1, start_column=3, end_row=1, end_column=len(existing_cols))
+        for c in range(1, len(existing_cols)+1):
+            ws.cell(row=1, column=c).border = thin_border
+
+        # 第2行：企业参考品批号
+        ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=2)
+        ws.cell(row=2, column=1, value="企业参考品批号").font = Font(bold=True, size=10)
+        ws.cell(row=2, column=1).alignment = Alignment(horizontal='center', vertical='center')
+        if len(existing_cols) > 2:
+            ws.merge_cells(start_row=2, start_column=3, end_row=2, end_column=len(existing_cols))
+        for c in range(1, len(existing_cols)+1):
+            ws.cell(row=2, column=c).border = thin_border
+
+        # 第3行：成品批号
+        ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=2)
+        ws.cell(row=3, column=1, value="成品批号").font = Font(bold=True, size=10)
+        ws.cell(row=3, column=1).alignment = Alignment(horizontal='center', vertical='center')
+        if len(existing_cols) > 2:
+            ws.merge_cells(start_row=3, start_column=3, end_row=3, end_column=len(existing_cols))
+        for c in range(1, len(existing_cols)+1):
+            ws.cell(row=3, column=c).border = thin_border
+
+        # 第4行：规格
+        ws.merge_cells(start_row=4, start_column=1, end_row=4, end_column=2)
+        ws.cell(row=4, column=1, value="规格").font = Font(bold=True, size=10)
+        ws.cell(row=4, column=1).alignment = Alignment(horizontal='center', vertical='center')
+        if len(existing_cols) > 2:
+            ws.merge_cells(start_row=4, start_column=3, end_row=4, end_column=len(existing_cols))
+        for c in range(1, len(existing_cols)+1):
+            ws.cell(row=4, column=c).border = thin_border
+
+        # 第5行：表头
+        header_row_num = 5
         for j, col_name in enumerate(existing_cols):
-            cell = ws.cell(row=3, column=j+1, value=col_name)
+            cell = ws.cell(row=header_row_num, column=j+1, value=col_name)
             cell.font = header_font
             cell.fill = header_fill
             cell.border = thin_border
             cell.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
 
-        data_font = Font(size=10)
-        result_col_idx = existing_cols.index("结果判读") + 1 if "结果判读" in existing_cols else None
-        rule_col_idx = existing_cols.index("结果判读规则") + 1 if "结果判读规则" in existing_cols else None
+        # 数据行从第6行开始
+        data_start_row = 6
 
         for i, row_data in enumerate(template_data):
-            row_num = 4 + i
+            row_num = data_start_row + i
             for j, col_name in enumerate(existing_cols):
                 orig_key = col_name
                 for ch in channels:
@@ -660,7 +697,6 @@ with tab1:
                 cell = ws.cell(row=row_num, column=j+1, value=value)
                 cell.font = data_font
                 cell.border = thin_border
-                # 质量标准列(第3列)、结果判读规则列自动换行
                 if j+1 == 3 or (rule_col_idx and j+1 == rule_col_idx):
                     cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
                 else:
@@ -668,21 +704,44 @@ with tab1:
                 if result_col_idx and j+1 == result_col_idx and value != "":
                     cell.fill = red_fill
 
+        # 最后一行数据之后空一行，加签名行
+        last_data_row = data_start_row + len(template_data) - 1
+        sign_row = last_data_row + 2  # 空一行
+
+        # 找到 CY5 和 VIC 列的位置
+        cy5_col = None
+        vic_col = None
+        for j, col_name in enumerate(existing_cols):
+            if "CY5" in col_name:
+                cy5_col = j + 1
+            if "VIC" in col_name:
+                vic_col = j + 1
+
+        if cy5_col and vic_col:
+            # 合并整行，在指定列位置写文字
+            ws.merge_cells(start_row=sign_row, start_column=1, end_row=sign_row, end_column=len(existing_cols))
+            ws.cell(row=sign_row, column=1, value="").border = thin_border
+            # 在合并单元格中写入左右两部分文字
+            sign_text = f"检验人/日期：{' ' * (40)}复核人/日期："
+            ws.cell(row=sign_row, column=1, value=sign_text).font = Font(size=10)
+            ws.cell(row=sign_row, column=1).alignment = Alignment(horizontal='left', vertical='center')
+
+        # 合并参考品列和质量标准列
         merge_ranges_col1 = []
         merge_ranges_col3 = []
-        start_row = 4
+        start_row = data_start_row
         prev_cat = None
         for i, row_data in enumerate(template_data):
             cat = row_data.get("参考品", "")
             if cat != "" and cat is not None:
-                if prev_cat is not None and start_row < 4 + i - 1:
-                    merge_ranges_col1.append((start_row, 4 + i - 1))
-                    merge_ranges_col3.append((start_row, 4 + i - 1))
-                start_row = 4 + i
+                if prev_cat is not None and start_row < data_start_row + i - 1:
+                    merge_ranges_col1.append((start_row, data_start_row + i - 1))
+                    merge_ranges_col3.append((start_row, data_start_row + i - 1))
+                start_row = data_start_row + i
                 prev_cat = cat
-        if prev_cat is not None and start_row < 4 + len(template_data) - 1:
-            merge_ranges_col1.append((start_row, 4 + len(template_data) - 1))
-            merge_ranges_col3.append((start_row, 4 + len(template_data) - 1))
+        if prev_cat is not None and start_row < data_start_row + len(template_data) - 1:
+            merge_ranges_col1.append((start_row, data_start_row + len(template_data) - 1))
+            merge_ranges_col3.append((start_row, data_start_row + len(template_data) - 1))
 
         for start, end in merge_ranges_col1:
             if end > start:
@@ -691,7 +750,6 @@ with tab1:
             if end > start:
                 ws.merge_cells(start_row=start, start_column=3, end_row=end, end_column=3)
 
-        rule_col_idx = existing_cols.index("结果判读规则") + 1 if "结果判读规则" in existing_cols else None
         if rule_col_idx:
             for start, end in merge_ranges_col1:
                 if end > start:
@@ -701,7 +759,7 @@ with tab1:
         stat_rows = []
         for i, row in enumerate(template_data):
             if str(row["编号"]) in ["平均值", "标准偏差", "变异系数（CV值）"]:
-                stat_rows.append(i + 4)
+                stat_rows.append(data_start_row + i)
         if stat_rows:
             groups = []
             group_start = stat_rows[0]
@@ -714,9 +772,6 @@ with tab1:
                 if g_end > g_start:
                     ws.merge_cells(start_row=g_start, start_column=2, end_row=g_end, end_column=2)
                     ws.merge_cells(start_row=g_start, start_column=3, end_row=g_end, end_column=3)
-
-        for j, col_name in enumerate(existing_cols):
-            ws.column_dimensions[get_column_letter(j+1)].width = max(15, len(str(col_name))*2)
 
         wb.save(output)
         output.seek(0)
