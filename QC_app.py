@@ -646,6 +646,7 @@ with tab1:
 
         data_font = Font(size=10)
         result_col_idx = existing_cols.index("结果判读") + 1 if "结果判读" in existing_cols else None
+        rule_col_idx = existing_cols.index("结果判读规则") + 1 if "结果判读规则" in existing_cols else None
 
         for i, row_data in enumerate(template_data):
             row_num = 4 + i
