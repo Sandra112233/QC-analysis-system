@@ -642,45 +642,45 @@ with tab1:
         result_col_idx = existing_cols.index("结果判读") + 1 if "结果判读" in existing_cols else None
         rule_col_idx = existing_cols.index("结果判读规则") + 1 if "结果判读规则" in existing_cols else None
 
-        # ==================== Excel 顶部信息行 ====================
-        # 第1行：日期（占参考品+编号2列，后面全部合并）
-        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=2)
-        ws.cell(row=1, column=1, value="日期").font = Font(bold=True, size=10)
-        ws.cell(row=1, column=1).alignment = Alignment(horizontal='center', vertical='center')
-        if len(existing_cols) > 2:
-            ws.merge_cells(start_row=1, start_column=3, end_row=1, end_column=len(existing_cols))
-        for c in range(1, len(existing_cols)+1):
-            ws.cell(row=1, column=c).border = thin_border
+             # ==================== Excel 顶部信息行 ====================
+        # 第3行：原始记录附页（A-K合并，居中）
+        ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=11)
+        title_cell = ws.cell(row=3, column=1, value="原始记录附页")
+        title_cell.font = Font(bold=True, size=14)
+        title_cell.alignment = Alignment(horizontal='center', vertical='center')
 
-        # 第2行：企业参考品批号
-        ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=2)
-        ws.cell(row=2, column=1, value="企业参考品批号").font = Font(bold=True, size=10)
-        ws.cell(row=2, column=1).alignment = Alignment(horizontal='center', vertical='center')
-        if len(existing_cols) > 2:
-            ws.merge_cells(start_row=2, start_column=3, end_row=2, end_column=len(existing_cols))
-        for c in range(1, len(existing_cols)+1):
-            ws.cell(row=2, column=c).border = thin_border
+        # 第5行：名称
+        ws.cell(row=5, column=1, value="名称：").font = Font(size=10)
 
-        # 第3行：成品批号
-        ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=2)
-        ws.cell(row=3, column=1, value="成品批号").font = Font(bold=True, size=10)
-        ws.cell(row=3, column=1).alignment = Alignment(horizontal='center', vertical='center')
-        if len(existing_cols) > 2:
-            ws.merge_cells(start_row=3, start_column=3, end_row=3, end_column=len(existing_cols))
-        for c in range(1, len(existing_cols)+1):
-            ws.cell(row=3, column=c).border = thin_border
+        # 第6行：上机名称 + 共页第页
+        ws.cell(row=6, column=1, value="上机名称：").font = Font(size=10)
+        ws.cell(row=6, column=11, value="共  页 第  页").font = Font(size=10)
+        ws.cell(row=6, column=11).alignment = Alignment(horizontal='right', vertical='center')
 
-        # 第4行：规格
-        ws.merge_cells(start_row=4, start_column=1, end_row=4, end_column=2)
-        ws.cell(row=4, column=1, value="规格").font = Font(bold=True, size=10)
-        ws.cell(row=4, column=1).alignment = Alignment(horizontal='center', vertical='center')
-        if len(existing_cols) > 2:
-            ws.merge_cells(start_row=4, start_column=3, end_row=4, end_column=len(existing_cols))
-        for c in range(1, len(existing_cols)+1):
-            ws.cell(row=4, column=c).border = thin_border
+        # 第7行：黑粗线（A-K底部边框）
+        thick_border = Border(bottom=Side(style='medium'))
+        for c in range(1, 12):
+            cell = ws.cell(row=7, column=c)
+            cell.border = thick_border
+            cell.value = ""
 
-        # 第5行：表头
-        header_row_num = 5
+        # 第8-11行：日期、企业参考品批号、成品批号、规格
+        for row_num in [8, 9, 10, 11]:
+            ws.merge_cells(start_row=row_num, start_column=1, end_row=row_num, end_column=2)
+            ws.cell(row=row_num, column=1).font = Font(bold=True, size=10)
+            ws.cell(row=row_num, column=1).alignment = Alignment(horizontal='center', vertical='center')
+            if len(existing_cols) > 2:
+                ws.merge_cells(start_row=row_num, start_column=3, end_row=row_num, end_column=len(existing_cols))
+            for c in range(1, len(existing_cols)+1):
+                ws.cell(row=row_num, column=c).border = thin_border
+
+        ws.cell(row=8, column=1, value="日期")
+        ws.cell(row=9, column=1, value="企业参考品批号")
+        ws.cell(row=10, column=1, value="成品批号")
+        ws.cell(row=11, column=1, value="规格")
+
+        # 第12行：表头
+        header_row_num = 12
         for j, col_name in enumerate(existing_cols):
             cell = ws.cell(row=header_row_num, column=j+1, value=col_name)
             cell.font = header_font
@@ -688,8 +688,8 @@ with tab1:
             cell.border = thin_border
             cell.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
 
-        # 数据行从第6行开始
-        data_start_row = 6
+        # 数据行从第13行开始
+        data_start_row = 13
 
         for i, row_data in enumerate(template_data):
             row_num = data_start_row + i
@@ -710,6 +710,7 @@ with tab1:
                 if result_col_idx and j+1 == result_col_idx and value != "":
                     cell.fill = red_fill
 
+
         # 最后一行数据之后空一行，加签名行
         last_data_row = data_start_row + len(template_data) - 1
         sign_row = last_data_row + 2  # 空一行
@@ -719,7 +720,7 @@ with tab1:
         sign_cell = ws.cell(row=sign_row, column=1)
         sign_cell.font = Font(size=10)
         sign_cell.alignment = Alignment(horizontal='center', vertical='center')
-        sign_cell.value = " " * 20 + "检验人/日期：" + " " * 50 + "复核人/日期："
+        sign_cell.value = " " * 15 + "检验人/日期：" + " " * 50 + "复核人/日期："
         
         # 合并参考品列、质量标准列、结果判读规则列
         merge_ranges_col1 = []
