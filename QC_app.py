@@ -654,8 +654,8 @@ with tab1:
 
         # 第6行：上机名称 + 共页第页
         ws.cell(row=6, column=1, value="上机名称：").font = Font(size=10)
-        ws.cell(row=6, column=11, value="共  页 第  页").font = Font(size=10)
-        ws.cell(row=6, column=11).alignment = Alignment(horizontal='right', vertical='center')
+        ws.cell(row=6, column=9, value="共  页 第  页").font = Font(size=10)
+        ws.cell(row=6, column=9).alignment = Alignment(horizontal='right', vertical='center')
 
         # 第7行：黑粗线（A-K底部边框）
         thick_border = Border(bottom=Side(style='medium'))
@@ -713,7 +713,7 @@ with tab1:
 
         # 最后一行数据之后空一行，加签名行
         last_data_row = data_start_row + len(template_data) - 1
-        sign_row = last_data_row + 2  # 空一行
+        sign_row = last_data_row + 2
 
         # 签名行：整行合并，居中
         ws.merge_cells(start_row=sign_row, start_column=1, end_row=sign_row, end_column=len(existing_cols))
@@ -779,6 +779,21 @@ with tab1:
 
         for j, col_name in enumerate(existing_cols):
             ws.column_dimensions[get_column_letter(j+1)].width = max(20, len(str(col_name))*2.5)
+
+        # 手动合并R1/R2/R3的质量标准列
+        for prefix in ["R1", "R2", "R3"]:
+            r_start = None
+            r_end = None
+            for i, row in enumerate(template_data):
+                sample = str(row.get("编号", ""))
+                if sample == prefix:
+                    if r_start is None:
+                        r_start = data_start_row + i
+                    r_end = data_start_row + i
+                elif r_start is not None and sample in ["平均值", "标准偏差", "变异系数（CV值）"]:
+                    r_end = data_start_row + i
+            if r_start is not None and r_end is not None and r_end >= r_start:
+                ws.merge_cells(start_row=r_start, start_column=3, end_row=r_end, end_column=3)        
         wb.save(output)
         output.seek(0)
 
