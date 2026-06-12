@@ -796,6 +796,32 @@ with tab1:
                 r = data_start_row + i
                 ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=3)
                 ws.cell(row=r, column=2).alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        for j, col_name in enumerate(existing_cols):
+            ws.column_dimensions[get_column_letter(j+1)].width = max(20, len(str(col_name))*2.5)
+
+        wb.save(output)
+        output.seek(0)
+
+        st.download_button(
+            label="📥 下载模板一 (Excel)",
+            data=output,
+            file_name=f"模板一_{batch_no}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+        if st.button("💾 保存到历史记录"):
+            record = {
+                "upload_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "product_name": product_name,
+                "batch_no": batch_no,
+                "spec": spec,
+                "inspector": inspector,
+                "inspection_date": str(inspection_date),
+                "data": {"template_data": template_data, "channels": channels, "project": project_name}
+            }
+            save_record(record)
+            st.success("✅ 已保存到历史记录！")
+            st.rerun()               
 
 # ==================== 历史记录 ====================
 with tab2:
