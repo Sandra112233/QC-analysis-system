@@ -745,7 +745,12 @@ with tab1:
                 if end > start:
                     ws.merge_cells(start_row=start, start_column=rule_col_idx, end_row=end, end_column=rule_col_idx)
 
-        # 统计行保留各自文字，不做纵向合并
+        # 统计行：横向合并编号(第2列)和质量标准(第3列)
+        for i, row in enumerate(template_data):
+            if str(row["编号"]) in ["平均值", "标准偏差", "变异系数（CV值）"]:
+                r = data_start_row + i
+                ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=3)
+                ws.cell(row=r, column=2).alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
         wb.save(output)
         output.seek(0)
