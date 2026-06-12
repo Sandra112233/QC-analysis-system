@@ -714,12 +714,12 @@ with tab1:
         last_data_row = data_start_row + len(template_data) - 1
         sign_row = last_data_row + 2  # 空一行
 
-        # 签名行：整行合并
+        # 签名行：整行合并，居中
         ws.merge_cells(start_row=sign_row, start_column=1, end_row=sign_row, end_column=len(existing_cols))
         sign_cell = ws.cell(row=sign_row, column=1)
         sign_cell.font = Font(size=10)
-        sign_cell.alignment = Alignment(horizontal='left', vertical='center')
-        sign_cell.value = "检验人/日期：                            复核人/日期："
+        sign_cell.alignment = Alignment(horizontal='center', vertical='center')
+        sign_cell.value = "检验人/日期：                                                            复核人/日期："
 
         # 合并参考品列、质量标准列、结果判读规则列
         merge_ranges_col1 = []
