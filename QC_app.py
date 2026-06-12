@@ -517,17 +517,27 @@ with tab1:
 
             template_data.append(row_data)
 
-        # R1/R2 统计行
-        for prefix in ["R1", "R2"]:
-            r_rows = [r for r in template_data if str(r["编号"]) == prefix]
-            if len(r_rows) >= 2:
+        # ==================== 在 R1/R2 数据后插入统计行 ====================
+        # 先找到 R1 和 R2 最后一行的位置
+        r1_last_idx = -1
+        r2_last_idx = -1
+        for i, row in enumerate(template_data):
+            if str(row["编号"]) == "R1":
+                r1_last_idx = i
+            elif str(row["编号"]) == "R2":
+                r2_last_idx = i
+
+        # 在 R1 最后一行之后插入统计行（倒序插入避免索引偏移）
+        if r1_last_idx >= 0:
+            r1_rows = [r for r in template_data if str(r["编号"]) == "R1"]
+            if len(r1_rows) >= 2:
                 avg_row = {"参考品": "", "编号": "平均值", "质量标准": "/"}
                 std_row = {"参考品": "", "编号": "标准偏差", "质量标准": "/"}
                 cv_row = {"参考品": "", "编号": "变异系数（CV值）", "质量标准": "/"}
                 cv_values = {}
                 for ch in channels:
                     vals = []
-                    for r in r_rows:
+                    for r in r1_rows:
                         v = r.get(f"{ch}通道Ct值", "Undetermined")
                         try:
                             vals.append(float(v))
@@ -553,9 +563,53 @@ with tab1:
                 cv_ok = all(isinstance(cv_values.get(ch), (int, float)) and cv_values.get(ch) <= 5 for ch in channels if ch != "CY5")
                 cv_row["结果判读"] = "符合规定" if cv_ok else ""
                 cv_row["结果判读规则"] = '数值小于等于"5"'
-                template_data.append(avg_row)
-                template_data.append(std_row)
-                template_data.append(cv_row)
+                # 倒序插入：先插 cv，再插 std，再插 avg
+                template_data.insert(r1_last_idx + 1, cv_row)
+                template_data.insert(r1_last_idx + 1, std_row)
+                template_data.insert(r1_last_idx + 1, avg_row)
+                # 更新 R2 索引（因为插入了3行）
+                if r2_last_idx > r1_last_idx:
+                    r2_last_idx += 3
+
+        # 在 R2 最后一行之后插入统计行
+        if r2_last_idx >= 0:
+            r2_rows = [r for r in template_data if str(r["编号"]) == "R2"]
+            if len(r2_rows) >= 2:
+                avg_row = {"参考品": "", "编号": "平均值", "质量标准": "/"}
+                std_row = {"参考品": "", "编号": "标准偏差", "质量标准": "/"}
+                cv_row = {"参考品": "", "编号": "变异系数（CV值）", "质量标准": "/"}
+                cv_values = {}
+                for ch in channels:
+                    vals = []
+                    for r in r2_rows:
+                        v = r.get(f"{ch}通道Ct值", "Undetermined")
+                        try:
+                            vals.append(float(v))
+                        except (ValueError, TypeError):
+                            pass
+                    if len(vals) > 0:
+                        a = np.mean(vals)
+                        s = np.std(vals, ddof=1) if len(vals) > 1 else 0.0
+                        c = round(s / a * 100, 2) if a != 0 else 0
+                    else:
+                        a, s, c = "/", "/", "/"
+                    avg_row[f"{ch}通道Ct值"] = a if not isinstance(a, str) else a
+                    std_row[f"{ch}通道Ct值"] = s if not isinstance(s, str) else s
+                    cv_row[f"{ch}通道Ct值"] = f"{c}%" if not isinstance(c, str) else c
+                    cv_values[ch] = c
+                avg_row["检测结果"] = "/"
+                avg_row["结果判读"] = "/"
+                avg_row["结果判读规则"] = ""
+                std_row["检测结果"] = "/"
+                std_row["结果判读"] = "/"
+                std_row["结果判读规则"] = ""
+                cv_row["检测结果"] = "/"
+                cv_ok = all(isinstance(cv_values.get(ch), (int, float)) and cv_values.get(ch) <= 5 for ch in channels if ch != "CY5")
+                cv_row["结果判读"] = "符合规定" if cv_ok else ""
+                cv_row["结果判读规则"] = '数值小于等于"5"'
+                template_data.insert(r2_last_idx + 1, cv_row)
+                template_data.insert(r2_last_idx + 1, std_row)
+                template_data.insert(r2_last_idx + 1, avg_row)       
 
         final_columns = ["参考品", "编号", "质量标准"]
         for ch in channels:
