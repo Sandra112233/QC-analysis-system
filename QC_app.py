@@ -719,7 +719,7 @@ with tab1:
         sign_cell = ws.cell(row=sign_row, column=1)
         sign_cell.font = Font(size=10)
         sign_cell.alignment = Alignment(horizontal='center', vertical='center')
-        sign_cell.value = "检验人/日期：                                                            复核人/日期："
+        sign_cell.value =                 "检验人/日期：                                复核人/日期："
 
         # 合并参考品列、质量标准列、结果判读规则列
         merge_ranges_col1 = []
