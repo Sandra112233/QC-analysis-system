@@ -745,23 +745,7 @@ with tab1:
                 if end > start:
                     ws.merge_cells(start_row=start, start_column=rule_col_idx, end_row=end, end_column=rule_col_idx)
 
-        # 合并统计行的编号(第2列)和质量标准(第3列)
-        stat_rows = []
-        for i, row in enumerate(template_data):
-            if str(row["编号"]) in ["平均值", "标准偏差", "变异系数（CV值）"]:
-                stat_rows.append(data_start_row + i)
-        if stat_rows:
-            groups = []
-            group_start = stat_rows[0]
-            for j in range(1, len(stat_rows)):
-                if stat_rows[j] != stat_rows[j-1] + 1:
-                    groups.append((group_start, stat_rows[j-1]))
-                    group_start = stat_rows[j]
-            groups.append((group_start, stat_rows[-1]))
-            for g_start, g_end in groups:
-                if g_end > g_start:
-                    ws.merge_cells(start_row=g_start, start_column=2, end_row=g_end, end_column=2)
-                    ws.merge_cells(start_row=g_start, start_column=3, end_row=g_end, end_column=3)
+        # 统计行保留各自文字，不做纵向合并
 
         wb.save(output)
         output.seek(0)
