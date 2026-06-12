@@ -526,9 +526,9 @@ with tab1:
         if r1_last_idx >= 0:
             r1_rows = [r for r in template_data if str(r["编号"]) == "R1"]
             if len(r1_rows) >= 2:
-                avg_row = {"参考品": "", "编号": "平均值", "质量标准": "/"}
-                std_row = {"参考品": "", "编号": "标准偏差", "质量标准": "/"}
-                cv_row = {"参考品": "", "编号": "变异系数（CV值）", "质量标准": "/"}
+                avg_row = {"参考品": "", "编号": "平均值", "质量标准": ""}
+                std_row = {"参考品": "", "编号": "标准偏差", "质量标准": ""}
+                cv_row = {"参考品": "", "编号": "变异系数（CV值）", "质量标准": ""}
                 cv_values = {}
                 for ch in channels:
                     vals = []
