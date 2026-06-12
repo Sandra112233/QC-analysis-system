@@ -719,8 +719,8 @@ with tab1:
         sign_cell = ws.cell(row=sign_row, column=1)
         sign_cell.font = Font(size=10)
         sign_cell.alignment = Alignment(horizontal='center', vertical='center')
-        sign_cell.value =                 "检验人/日期：                                复核人/日期："
-
+        sign_cell.value = " " * 20 + "检验人/日期：" + " " * 50 + "复核人/日期："
+        
         # 合并参考品列、质量标准列、结果判读规则列
         merge_ranges_col1 = []
         merge_ranges_col3 = []
@@ -778,6 +778,8 @@ with tab1:
                 ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=3)
                 ws.cell(row=r, column=2).alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
+        for j, col_name in enumerate(existing_cols):
+            ws.column_dimensions[get_column_letter(j+1)].width = max(20, len(str(col_name))*2.5)
         wb.save(output)
         output.seek(0)
 
