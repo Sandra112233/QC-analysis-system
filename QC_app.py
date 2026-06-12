@@ -724,107 +724,78 @@ with tab1:
         
 
         # ==================== 手动精确合并 ====================
-        # 1. 合并参考品列
-        merge_groups_col1 = {
-            "阴性参考品": ("N", 1, 25),
-            "阳性参考品": ("P", 1, 20),
-            "最低检出限参考品": ("S", 1, 8),
-            "重复性参考品R1": ("R1", 1, 13),
-            "重复性参考品R2": ("R2", 1, 13),
-            "重复性参考品R3": ("R3", 1, 10),
-            "ABnC阳性质控品": ("YANG", 1, 1),
-            "ABnC阴性质控品": ("YIN", 1, 1),
-        }
-
-        row_map = {}  # sample -> excel row
+        # 根据 template_data 自动计算每组的起止行
+        # 按顺序遍历，识别分组边界
+        
+        # 先建立每个样本的Excel行号映射
+        sample_rows = {}  # sample -> [row_numbers]
         for i, row in enumerate(template_data):
             sample = str(row.get("编号", ""))
-            if sample not in row_map:
-                row_map[sample] = data_start_row + i
+            r = data_start_row + i
+            if sample not in sample_rows:
+                sample_rows[sample] = []
+            sample_rows[sample].append(r)
 
-        for cat_name, (prefix, start_n, count) in merge_groups_col1.items():
-            if prefix in row_map:
-                s = row_map[prefix]
-                e = s + count - 1
+        # 定义分组顺序
+        group_order = [
+            ("N", "阴性参考品"),
+            ("P", "阳性参考品"),
+            ("S", "最低检出限参考品"),
+            ("R1", "重复性参考品R1"),
+            ("R2", "重复性参考品R2"),
+            ("R3", "重复性参考品R3"),
+            ("YANG", "ABnC阳性质控品"),
+            ("YIN", "ABnC阴性质控品"),
+        ]
+
+        # 收集每个分组的数据行和统计行
+        for prefix, cat_name in group_order:
+            # 找该分组所有数据行
+            data_rows = []
+            stat_rows_list = []
+            in_group = False
+            for i, row in enumerate(template_data):
+                sample = str(row.get("编号", ""))
+                if sample.startswith(prefix) and not sample.startswith(prefix + "0") if len(prefix) == 2 else sample.startswith(prefix):
+                    if prefix in ["R1", "R2", "R3"]:
+                        if sample == prefix:
+                            data_rows.append(data_start_row + i)
+                    else:
+                        data_rows.append(data_start_row + i)
+                    in_group = True
+                elif in_group and sample in ["平均值", "标准偏差", "变异系数（CV值）"]:
+                    # 判断是否属于当前分组
+                    prev = str(template_data[i-1].get("编号", "")) if i > 0 else ""
+                    if prev.startswith(prefix):
+                        stat_rows_list.append(data_start_row + i)
+                else:
+                    if in_group and sample.startswith("R") and not sample.startswith(prefix):
+                        in_group = False
+
+            if data_rows:
+                s = data_rows[0]
+                e = stat_rows_list[-1] if stat_rows_list else data_rows[-1]
                 if e > s:
+                    # 合并参考品列
                     ws.merge_cells(start_row=s, start_column=1, end_row=e, end_column=1)
                     ws.cell(row=s, column=1).value = cat_name
                     ws.cell(row=s, column=1).font = data_font
                     ws.cell(row=s, column=1).alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
-        # 2. 合并质量标准列（R1/R2含统计行）
-        for prefix in ["R1", "R2", "R3"]:
-            if prefix in row_map:
-                s = row_map[prefix]
-                # 找统计行
-                e = s
-                for i, row in enumerate(template_data):
-                    if str(row.get("编号", "")) in ["平均值", "标准偏差", "变异系数（CV值）"]:
-                        stat_row = data_start_row + i
-                        if stat_row > e and row_map.get(prefix, 0) < stat_row:
-                            # 判断这个统计行属于哪个prefix
-                            prev_sample = None
-                            for j in range(i-1, -1, -1):
-                                prev_sample = str(template_data[j].get("编号", ""))
-                                if prev_sample.startswith(prefix):
-                                    e = stat_row
-                                    break
-                                elif prev_sample.startswith("R") and not prev_sample.startswith(prefix):
-                                    break
-                if e > s:
-                    ws.merge_cells(start_row=s, start_column=3, end_row=e, end_column=3)
+                    # 合并质量标准列（R组含统计行）
+                    if prefix in ["R1", "R2", "R3"]:
+                        ws.merge_cells(start_row=s, start_column=3, end_row=e, end_column=3)
 
-        # 3. 合并结果判读规则列
-        if rule_col_idx:
-            for cat_name, (prefix, start_n, count) in merge_groups_col1.items():
-                if prefix in row_map:
-                    s = row_map[prefix]
-                    e = s + count - 1
-                    # R1/R2扩展到统计行
-                    if prefix in ["R1", "R2"]:
-                        for i, row in enumerate(template_data):
-                            if str(row.get("编号", "")) in ["平均值", "标准偏差", "变异系数（CV值）"]:
-                                stat_row = data_start_row + i
-                                if stat_row > e:
-                                    prev_sample = str(template_data[i-1].get("编号", ""))
-                                    if prev_sample.startswith(prefix):
-                                        e = stat_row
-                    if e > s:
+                    # 合并结果判读规则列
+                    if rule_col_idx:
                         ws.merge_cells(start_row=s, start_column=rule_col_idx, end_row=e, end_column=rule_col_idx)
 
-        # 4. 统计行横向合并编号+质量标准
+        # 统计行横向合并编号+质量标准
         for i, row in enumerate(template_data):
             if str(row["编号"]) in ["平均值", "标准偏差", "变异系数（CV值）"]:
                 r = data_start_row + i
                 ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=3)
                 ws.cell(row=r, column=2).alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-
-        for j, col_name in enumerate(existing_cols):
-            ws.column_dimensions[get_column_letter(j+1)].width = max(20, len(str(col_name))*2.5)
-
-        wb.save(output)
-        output.seek(0)
-
-        st.download_button(
-            label="📥 下载模板一 (Excel)",
-            data=output,
-            file_name=f"模板一_{batch_no}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-
-        if st.button("💾 保存到历史记录"):
-            record = {
-                "upload_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "product_name": product_name,
-                "batch_no": batch_no,
-                "spec": spec,
-                "inspector": inspector,
-                "inspection_date": str(inspection_date),
-                "data": {"template_data": template_data, "channels": channels, "project": project_name}
-            }
-            save_record(record)
-            st.success("✅ 已保存到历史记录！")
-            st.rerun()
 
 # ==================== 历史记录 ====================
 with tab2:
