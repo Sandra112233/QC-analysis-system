@@ -709,28 +709,49 @@ with tab1:
         sign_row = last_data_row + 2  # 空一行
 
         # 签名行：整行合并
+        sign_cell = ws.cell(row=sign_row, column=1, value="检验人/日期：                                                            复核人/日期：")
+        sign_cell.font = Font(size=10)
+        sign_cell.alignment = Alignment(horizontal='left', vertical='center')
         ws.merge_cells(start_row=sign_row, start_column=1, end_row=sign_row, end_column=len(existing_cols))
-        ws.cell(row=sign_row, column=1, value="检验人/日期：                                                            复核人/日期：")
-        ws.cell(row=sign_row, column=1).font = Font(size=10)
-        ws.cell(row=sign_row, column=1).alignment = Alignment(horizontal='left', vertical='center')
 
-
-        # 合并参考品列和质量标准列
+        # 合并参考品列、质量标准列、结果判读规则列
         merge_ranges_col1 = []
         merge_ranges_col3 = []
+        merge_ranges_rule = []
         start_row = data_start_row
-        prev_cat = None
+        prev_grp = None
+
         for i, row_data in enumerate(template_data):
+            sample = str(row_data.get("编号", ""))
             cat = row_data.get("参考品", "")
+
+            # 判断是否新分组：参考品列有文字，或者是统计行开始，或者R前缀变化
+            new_group = False
             if cat != "" and cat is not None:
-                if prev_cat is not None and start_row < data_start_row + i - 1:
+                new_group = True
+            elif sample in ["平均值", "标准偏差", "变异系数（CV值）"]:
+                new_group = True
+            elif sample.startswith("R") and prev_grp and not prev_grp.startswith(sample[:2]):
+                new_group = True
+
+            if new_group:
+                if prev_grp is not None and start_row < data_start_row + i - 1:
                     merge_ranges_col1.append((start_row, data_start_row + i - 1))
                     merge_ranges_col3.append((start_row, data_start_row + i - 1))
+                    merge_ranges_rule.append((start_row, data_start_row + i - 1))
                 start_row = data_start_row + i
-                prev_cat = cat
-        if prev_cat is not None and start_row < data_start_row + len(template_data) - 1:
+
+            if sample.startswith("R"):
+                prev_grp = sample[:2]
+            elif sample in ["平均值", "标准偏差", "变异系数（CV值）"]:
+                prev_grp = "stat"
+            elif cat != "":
+                prev_grp = cat
+
+        if prev_grp is not None and start_row < data_start_row + len(template_data) - 1:
             merge_ranges_col1.append((start_row, data_start_row + len(template_data) - 1))
             merge_ranges_col3.append((start_row, data_start_row + len(template_data) - 1))
+            merge_ranges_rule.append((start_row, data_start_row + len(template_data) - 1))
 
         for start, end in merge_ranges_col1:
             if end > start:
@@ -738,9 +759,8 @@ with tab1:
         for start, end in merge_ranges_col3:
             if end > start:
                 ws.merge_cells(start_row=start, start_column=3, end_row=end, end_column=3)
-
         if rule_col_idx:
-            for start, end in merge_ranges_col1:
+            for start, end in merge_ranges_rule:
                 if end > start:
                     ws.merge_cells(start_row=start, start_column=rule_col_idx, end_row=end, end_column=rule_col_idx)
 
