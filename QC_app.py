@@ -713,8 +713,7 @@ with tab1:
         ws.cell(row=sign_row, column=1, value="检验人/日期：                                                            复核人/日期：")
         ws.cell(row=sign_row, column=1).font = Font(size=10)
         ws.cell(row=sign_row, column=1).alignment = Alignment(horizontal='left', vertical='center')
-        for c in range(1, len(existing_cols)+1):
-            ws.cell(row=sign_row, column=c).border = thin_border
+
 
         # 合并参考品列和质量标准列
         merge_ranges_col1 = []
