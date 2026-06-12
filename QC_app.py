@@ -733,11 +733,9 @@ with tab1:
             sample = str(row_data.get("编号", ""))
             cat = row_data.get("参考品", "")
 
-            # 判断是否新分组：参考品列有文字，或者是统计行开始，或者R前缀变化
+            # 判断是否新分组
             new_group = False
             if cat != "" and cat is not None:
-                new_group = True
-            elif sample in ["平均值", "标准偏差", "变异系数（CV值）"]:
                 new_group = True
             elif sample.startswith("R") and prev_grp and not prev_grp.startswith(sample[:2]):
                 new_group = True
@@ -752,7 +750,7 @@ with tab1:
             if sample.startswith("R"):
                 prev_grp = sample[:2]
             elif sample in ["平均值", "标准偏差", "变异系数（CV值）"]:
-                prev_grp = "stat"
+                pass  # 统计行沿用上一个分组，不更新prev_grp
             elif cat != "":
                 prev_grp = cat
 
@@ -777,7 +775,7 @@ with tab1:
             if str(row["编号"]) in ["平均值", "标准偏差", "变异系数（CV值）"]:
                 r = data_start_row + i
                 ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=3)
-                ws.cell(row=r, column=2).alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+                ws.cell(row=r, column=2).alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)    
 
         for j, col_name in enumerate(existing_cols):
             ws.column_dimensions[get_column_letter(j+1)].width = max(20, len(str(col_name))*2.5)
