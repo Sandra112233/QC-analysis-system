@@ -43,67 +43,67 @@ PROJECT_CONFIGS = {
             "N": {
                 "CY5": "≤38", "FAM": "Undetermined或≥42", "Texas Red": "Undetermined或≥42", "VIC": "Undetermined或≥42",
                 "expected": "阴性", "quality": "均为阴性",
-                "rule_text": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\";\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\";\"VIC通道Ct值\"为\"Undetermined或Ct≥42\";\"CY5通道Ct值\"为\"Ct≤38\""
+                "rule_text": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\"\n\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\"\n\"VIC通道Ct值\"为\"Undetermined或Ct≥42\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "P1-P10": {
                 "CY5": "≤38", "FAM": "≤38", "Texas Red": "Undetermined或≥42", "VIC": "Undetermined或≥42",
                 "expected": "阳性", "quality": "甲型流感病毒阳性",
-                "rule_text": "\"CY5通道Ct值\"为\"Ct≤38\"，\"FAM通道Ct值\"为\"Ct≤38\"，\"VIC通道Ct值\"为\"Undetermined或Ct≥42\"，\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\""
+                "rule_text": "\"FAM通道Ct值\"为\"Ct≤38\"\n\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\"\n\"VIC通道Ct值\"为\"Undetermined或Ct≥42\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "P11-P14": {
                 "CY5": "≤38", "FAM": "Undetermined或≥42", "Texas Red": "≤38", "VIC": "Undetermined或≥42",
                 "expected": "阳性", "quality": "乙型流感病毒阳性",
-                "rule_text": "\"CY5通道Ct值\"为\"Ct≤38\"，\"Texas Red通道Ct值\"为\"Ct≤38\"，\"FAM通道Ct值\"为\"Undetermined或Ct≥42\"，\"VIC通道Ct值\"为\"Undetermined或Ct≥42\""
+                "rule_text": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\"\n\"Texas Red通道Ct值\"为\"Ct≤38\"\n\"VIC通道Ct值\"为\"Undetermined或Ct≥42\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "P15-P20": {
                 "CY5": "≤38", "FAM": "Undetermined或≥42", "Texas Red": "Undetermined或≥42", "VIC": "≤38",
                 "expected": "阳性", "quality": "2019-nCoV新型冠状病毒阳性",
-                "rule_text": "\"CY5通道Ct值\"为\"Ct≤38\"，\"VIC通道Ct值\"为\"Ct≤38\"，\"FAM通道Ct值\"为\"Undetermined或Ct≥42\"，\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\""
+                "rule_text": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\"\n\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\"\n\"VIC通道Ct值\"为\"Ct≤38\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "S1-S5": {
                 "CY5": "≤38", "FAM": "≤38", "Texas Red": "Undetermined或≥42", "VIC": "Undetermined或≥42",
                 "expected": "阳性", "quality": "甲型流感病毒阳性",
-                "rule_text": "\"CY5通道Ct值\"为\"Ct≤38\"，\"FAM通道Ct值\"为\"Ct≤38\"，\"VIC通道Ct值\"为\"Undetermined或Ct≥42\"，\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\""
+                "rule_text": "\"FAM通道Ct值\"为\"Ct≤38\"\n\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\"\n\"VIC通道Ct值\"为\"Undetermined或Ct≥42\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "S6-S7": {
                 "CY5": "≤38", "FAM": "Undetermined或≥42", "Texas Red": "≤38", "VIC": "Undetermined或≥42",
                 "expected": "阳性", "quality": "乙型流感病毒阳性",
-                "rule_text": "\"CY5通道Ct值\"为\"Ct≤38\"，\"Texas Red通道Ct值\"为\"Ct≤38\"，\"FAM通道Ct值\"为\"Undetermined或Ct≥42\"，\"VIC通道Ct值\"为\"Undetermined或Ct≥42\""
+                "rule_text": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\"\n\"Texas Red通道Ct值\"为\"Ct≤38\"\n\"VIC通道Ct值\"为\"Undetermined或Ct≥42\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "S8": {
                 "CY5": "≤38", "FAM": "Undetermined或≥42", "Texas Red": "Undetermined或≥42", "VIC": "≤38",
                 "expected": "阳性", "quality": "2019-nCoV新型冠状病毒阳性",
-                "rule_text": "\"CY5通道Ct值\"为\"Ct≤38\"，\"VIC通道Ct值\"为\"Ct≤38\"，\"FAM通道Ct值\"为\"Undetermined或Ct≥42\"，\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\""
+                "rule_text": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\"\n\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\"\n\"VIC通道Ct值\"为\"Ct≤38\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "R1": {
                 "CY5": "无要求", "FAM": "≤38", "Texas Red": "≤38", "VIC": "≤38",
                 "expected": "阳性",
                 "quality": "检测重复性参考品R1，重复检测10次，R1检测结果应均为阳性，且各重复性参考品检测结果Ct值的变异系数CV值均≤5%（内标通道无需进行统计）。",
-                "rule_text": "\"FAM通道Ct值\"为\"Ct≤38\";\"Texas Red通道Ct值\"为\"Ct≤38\";\"VIC通道Ct值\"为\"Ct≤38\";\"CY5通道Ct值\"为\"Ct≤38\""
+                "rule_text": "\"FAM通道Ct值\"为\"Ct≤38\"\n\"Texas Red通道Ct值\"为\"Ct≤38\"\n\"VIC通道Ct值\"为\"Ct≤38\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "R2": {
                 "CY5": "无要求", "FAM": "≤38", "Texas Red": "≤38", "VIC": "≤38",
                 "expected": "阳性",
                 "quality": "检测重复性参考品R2，重复检测10次，R2检测结果应均为阳性，且各重复性参考品检测结果Ct值的变异系数CV值均≤5%（内标通道无需进行统计）。",
-                "rule_text": "\"FAM通道Ct值\"为\"Ct≤38\";\"Texas Red通道Ct值\"为\"Ct≤38\";\"VIC通道Ct值\"为\"Ct≤38\";\"CY5通道Ct值\"为\"Ct≤38\""
+                "rule_text": "\"FAM通道Ct值\"为\"Ct≤38\"\n\"Texas Red通道Ct值\"为\"Ct≤38\"\n\"VIC通道Ct值\"为\"Ct≤38\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "R3": {
                 "CY5": "≤38", "FAM": "Undetermined或≥42", "Texas Red": "Undetermined或≥42", "VIC": "Undetermined或≥42",
                 "expected": "阴性",
                 "quality": "检测重复性参考品R3，重复检测10次，R3检测结果应为阴性。",
-                "rule_text": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\";\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\";\"VIC通道Ct值\"为\"Undetermined或Ct≥42\";\"CY5通道Ct值\"为\"Ct≤38\""
+                "rule_text": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\"\n\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\"\n\"VIC通道Ct值\"为\"Undetermined或Ct≥42\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "YANG": {
                 "CY5": "无要求", "FAM": "≤38", "Texas Red": "≤38", "VIC": "≤38",
                 "expected": "阳性",
-                "quality": "FAM、Texas Red、VIC检测通道均存在明显扩增曲线，且Ct值≤38，CY5通道有或无扩增曲线",
-                "rule_text": "\"FAM通道Ct值\"为\"Ct≤38\";\"Texas Red通道Ct值\"为\"Ct≤38\";\"VIC通道Ct值\"为\"Ct≤38\""
+                "quality": "FAM、Texas Red、VIC检测通道均存在明显扩增曲线，且Ct值≤32，CY5通道有或无扩增曲线",
+                "rule_text": "\"FAM通道Ct值\"为\"Ct≤38\"\n\"Texas Red通道Ct值\"为\"Ct≤38\"\n\"VIC通道Ct值\"为\"Ct≤38\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "YIN": {
                 "CY5": "≤38", "FAM": "Undetermined", "Texas Red": "Undetermined", "VIC": "Undetermined",
                 "expected": "阴性",
                 "quality": "为阴性，CY5通道存在明显扩增曲线，且Ct值≤38，其他通道无扩增曲线。",
-                "rule_text": "\"FAM通道Ct值\"为\"Undetermined\";\"Texas Red通道Ct值\"为\"Undetermined\";\"VIC通道Ct值\"为\"Undetermined\";\"CY5通道Ct值\"为\"Ct≤38\""
+                "rule_text": "\"FAM通道Ct值\"为\"Undetermined\"\n\"Texas Red通道Ct值\"为\"Undetermined\"\n\"VIC通道Ct值\"为\"Undetermined\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
         }
     },
@@ -135,67 +135,67 @@ PROJECT_CONFIGS = {
             "N": {
                 "CY5": "≤38", "FAM": "Undetermined或≥42", "Texas Red": "Undetermined或≥42", "VIC": "Undetermined或≥42",
                 "expected": "阴性", "quality": "均为阴性",
-                "rule_text": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\";\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\";\"VIC通道Ct值\"为\"Undetermined或Ct≥42\";\"CY5通道Ct值\"为\"Ct≤38\""
+                "rule_text": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\"\n\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\"\n\"VIC通道Ct值\"为\"Undetermined或Ct≥42\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "P1-P10": {
                 "CY5": "≤38", "FAM": "≤38", "Texas Red": "Undetermined或≥42", "VIC": "Undetermined或≥42",
                 "expected": "阳性", "quality": "阳性",
-                "rule_text": "\"CY5通道Ct值\"为\"Ct≤38\"，\"FAM通道Ct值\"为\"Ct≤38\""
+                "rule_text": "\"FAM通道Ct值\"为\"Ct≤38\"\n\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\"\n\"VIC通道Ct值\"为\"Undetermined或Ct≥42\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "P11-P14": {
                 "CY5": "≤38", "FAM": "Undetermined或≥42", "Texas Red": "≤38", "VIC": "Undetermined或≥42",
                 "expected": "阳性", "quality": "阳性",
-                "rule_text": "\"CY5通道Ct值\"为\"Ct≤38\"，\"Texas Red通道Ct值\"为\"Ct≤38\""
+                "rule_text": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\"\n\"Texas Red通道Ct值\"为\"Ct≤38\"\n\"VIC通道Ct值\"为\"Undetermined或Ct≥42\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "P15-P20": {
                 "CY5": "≤38", "FAM": "Undetermined或≥42", "Texas Red": "Undetermined或≥42", "VIC": "≤38",
                 "expected": "阳性", "quality": "阳性",
-                "rule_text": "\"CY5通道Ct值\"为\"Ct≤38\"，\"VIC通道Ct值\"为\"Ct≤38\""
+                "rule_text": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\"\n\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\"\n\"VIC通道Ct值\"为\"Ct≤38\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "S1-S5": {
                 "CY5": "≤38", "FAM": "≤38", "Texas Red": "Undetermined或≥42", "VIC": "Undetermined或≥42",
                 "expected": "阳性", "quality": "阳性",
-                "rule_text": "\"CY5通道Ct值\"为\"Ct≤38\"，\"FAM通道Ct值\"为\"Ct≤38\""
+                "rule_text": "\"FAM通道Ct值\"为\"Ct≤38\"\n\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\"\n\"VIC通道Ct值\"为\"Undetermined或Ct≥42\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "S6-S7": {
                 "CY5": "≤38", "FAM": "Undetermined或≥42", "Texas Red": "≤38", "VIC": "Undetermined或≥42",
                 "expected": "阳性", "quality": "阳性",
-                "rule_text": "\"CY5通道Ct值\"为\"Ct≤38\"，\"Texas Red通道Ct值\"为\"Ct≤38\""
+                "rule_text": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\"\n\"Texas Red通道Ct值\"为\"Ct≤38\"\n\"VIC通道Ct值\"为\"Undetermined或Ct≥42\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "S8": {
                 "CY5": "≤38", "FAM": "Undetermined或≥42", "Texas Red": "Undetermined或≥42", "VIC": "≤38",
                 "expected": "阳性", "quality": "阳性",
-                "rule_text": "\"CY5通道Ct值\"为\"Ct≤38\"，\"VIC通道Ct值\"为\"Ct≤38\""
+                "rule_text": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\"\n\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\"\n\"VIC通道Ct值\"为\"Ct≤38\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "R1": {
                 "CY5": "无要求", "FAM": "≤38", "Texas Red": "≤38", "VIC": "≤38",
                 "expected": "阳性",
                 "quality": "检测重复性参考品R1，重复检测10次，R1检测结果应均为阳性，且各重复性参考品检测结果Ct值的变异系数CV值均≤5%（内标通道无需进行统计）。",
-                "rule_text": "\"FAM通道Ct值\"为\"Ct≤38\";\"Texas Red通道Ct值\"为\"Ct≤38\";\"VIC通道Ct值\"为\"Ct≤38\""
+                "rule_text": "\"FAM通道Ct值\"为\"Ct≤38\"\n\"Texas Red通道Ct值\"为\"Ct≤38\"\n\"VIC通道Ct值\"为\"Ct≤38\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "R2": {
                 "CY5": "无要求", "FAM": "≤38", "Texas Red": "≤38", "VIC": "≤38",
                 "expected": "阳性",
                 "quality": "检测重复性参考品R2，重复检测10次，R2检测结果应均为阳性，且各重复性参考品检测结果Ct值的变异系数CV值均≤5%（内标通道无需进行统计）。",
-                "rule_text": "\"FAM通道Ct值\"为\"Ct≤38\";\"Texas Red通道Ct值\"为\"Ct≤38\";\"VIC通道Ct值\"为\"Ct≤38\""
+                "rule_text": "\"FAM通道Ct值\"为\"Ct≤38\"\n\"Texas Red通道Ct值\"为\"Ct≤38\"\n\"VIC通道Ct值\"为\"Ct≤38\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "R3": {
                 "CY5": "≤38", "FAM": "Undetermined或≥42", "Texas Red": "Undetermined或≥42", "VIC": "Undetermined或≥42",
                 "expected": "阴性",
                 "quality": "检测重复性参考品R3，重复检测10次，R3检测结果应为阴性。",
-                "rule_text": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\";\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\";\"VIC通道Ct值\"为\"Undetermined或Ct≥42\";\"CY5通道Ct值\"为\"Ct≤38\""
+                "rule_text": "\"FAM通道Ct值\"为\"Undetermined或Ct≥42\"\n\"Texas Red通道Ct值\"为\"Undetermined或Ct≥42\"\n\"VIC通道Ct值\"为\"Undetermined或Ct≥42\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "YANG": {
                 "CY5": "无要求", "FAM": "≤38", "Texas Red": "≤38", "VIC": "≤38",
                 "expected": "阳性",
                 "quality": "FAM、Texas Red、VIC检测通道均存在明显扩增曲线，且Ct值≤38，CY5通道有或无扩增曲线",
-                "rule_text": "\"FAM通道Ct值\"为\"Ct≤38\";\"Texas Red通道Ct值\"为\"Ct≤38\";\"VIC通道Ct值\"为\"Ct≤38\""
+                "rule_text": "\"FAM通道Ct值\"为\"Ct≤38\"\n\"Texas Red通道Ct值\"为\"Ct≤38\"\n\"VIC通道Ct值\"为\"Ct≤38\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "YIN": {
                 "CY5": "≤38", "FAM": "Undetermined", "Texas Red": "Undetermined", "VIC": "Undetermined",
                 "expected": "阴性",
                 "quality": "为阴性，CY5通道存在明显扩增曲线，且Ct值≤38，其他通道无扩增曲线。",
-                "rule_text": "\"FAM通道Ct值\"为\"Undetermined\";\"Texas Red通道Ct值\"为\"Undetermined\";\"VIC通道Ct值\"为\"Undetermined\";\"CY5通道Ct值\"为\"Ct≤38\""
+                "rule_text": "\"FAM通道Ct值\"为\"Undetermined\"\n\"Texas Red通道Ct值\"为\"Undetermined\"\n\"VIC通道Ct值\"为\"Undetermined\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
         }
     }
@@ -263,7 +263,29 @@ def do_judge(row_data, channels, judge_rule):
     if cy5_val == "Undetermined" or (isinstance(cy5_val, (int, float)) and cy5_val > 38):
         return "无效", "不符合规定", "\"CY5通道Ct值\"为\"Undetermined或Ct>38\"，结果无效。"
 
+    expected = judge_rule.get("expected", "") if judge_rule else ""
     pathogens = config["pathogens"]
+
+    # 统计有多少病毒通道阳性
+    positive_count = 0
+    for pathogen in pathogens:
+        ch = pathogen["channel"]
+        if ch not in channels:
+            continue
+        ch_val = row_data.get(f"{ch}通道Ct值", "Undetermined")
+        try:
+            ch_ct = float(ch_val)
+            if ch_ct <= pathogen["threshold"]:
+                positive_count += 1
+        except (ValueError, TypeError):
+            pass
+
+    # 多通道全阳且预期阳性 → 直接判阳性
+    if positive_count >= 2 and expected == "阳性":
+        rule_text = judge_rule.get("rule_text", "") if judge_rule else ""
+        return "阳性", "符合规定", rule_text
+
+    # 按病原优先级判读
     for pathogen in pathogens:
         ch = pathogen["channel"]
         if ch not in channels:
@@ -281,6 +303,7 @@ def do_judge(row_data, channels, judge_rule):
         except (ValueError, TypeError):
             pass
 
+    # 判阴性
     all_negative = True
     for pathogen in pathogens:
         ch = pathogen["channel"]
@@ -351,7 +374,6 @@ with tab1:
     uploaded_file = st.file_uploader("选择仪器导出的 .xls 文件", type=["xls", "xlsx"])
 
     if uploaded_file is not None:
-        # 读取数据
         try:
             df_raw = pd.read_excel(uploaded_file, header=6)
             if "Well" not in str(df_raw.columns) and "Sample Name" not in str(df_raw.columns):
@@ -372,7 +394,6 @@ with tab1:
         df_raw.columns = [str(c).strip() for c in df_raw.columns]
         df_raw = df_raw.dropna(how="all")
 
-        # 找Ct列（忽略大小写）
         ct_col = None
         for col in df_raw.columns:
             col_clean = col.replace(" ", "").upper()
@@ -392,17 +413,13 @@ with tab1:
         st.subheader("📊 原始数据预览")
         st.dataframe(df_raw, use_container_width=True)
 
-        # 提取通道：忽略大小写和空格匹配
         available_targets = df_raw["Target Name"].dropna().unique().tolist()
         available_targets_clean = [t.strip().upper() for t in available_targets]
         channels = [t for t in config["channels"] if t.upper() in available_targets_clean]
 
-        # ==================== 核心：逐行遍历构建样本列表 ====================
         df_data = df_raw.dropna(subset=["Sample Name", "Target Name"], how="all").copy()
         df_data["Sample Name"] = df_data["Sample Name"].astype(str).str.strip()
         df_data["Target Name"] = df_data["Target Name"].astype(str).str.strip()
-
-        # 为方便匹配，建一个 Target Name 标准化列
         df_data["Target_Clean"] = df_data["Target Name"].str.replace(" ", "").str.upper()
 
         samples = []
@@ -427,7 +444,6 @@ with tab1:
                     samples.append(sample)
                     non_r_seen.add(sample)
 
-        # 排序
         category_order = {"N": 1, "P": 2, "S": 3, "R": 4, "YANG": 5, "YIN": 6}
         def sort_key(sample):
             s = str(sample)
@@ -440,7 +456,6 @@ with tab1:
 
         samples = sorted(samples, key=sort_key)
 
-        # ==================== 构建模板一 ====================
         template_data = []
         current_category = ""
         r_occurrence = {}
@@ -472,7 +487,6 @@ with tab1:
                 sample_rows = df_data[df_data["Sample Name"] == sample]
 
             for ch in channels:
-                # 忽略大小写和空格匹配 Target Name
                 ch_clean = ch.replace(" ", "").upper()
                 ch_row = sample_rows[sample_rows["Target_Clean"] == ch_clean]
                 if len(ch_row) > 0:
@@ -485,7 +499,10 @@ with tab1:
                 result, verdict, rule_text = do_judge(row_data, channels, judge_rule)
                 row_data["检测结果"] = result
                 row_data["结果判读"] = verdict
-                row_data["结果判读规则"] = rule_text
+                if display_category != "":
+                    row_data["结果判读规则"] = rule_text
+                else:
+                    row_data["结果判读规则"] = ""
             else:
                 row_data["检测结果"] = ""
                 row_data["结果判读"] = ""
@@ -526,14 +543,13 @@ with tab1:
                 std_row["结果判读"] = "/"
                 std_row["结果判读规则"] = ""
                 cv_row["检测结果"] = "/"
-                cv_ok = all(isinstance(cv_values.get(ch), (int, float)) and cv_values.get(ch) <= 5 for ch in channels)
+                cv_ok = all(isinstance(cv_values.get(ch), (int, float)) and cv_values.get(ch) <= 5 for ch in channels if ch != "CY5")
                 cv_row["结果判读"] = "符合规定" if cv_ok else ""
                 cv_row["结果判读规则"] = '数值小于等于"5"'
                 template_data.append(avg_row)
                 template_data.append(std_row)
                 template_data.append(cv_row)
 
-        # 构建最终列顺序
         final_columns = ["参考品", "编号", "质量标准"]
         for ch in channels:
             final_columns.append(config["channel_labels"].get(ch, f"{ch}通道Ct值"))
@@ -550,7 +566,6 @@ with tab1:
         st.subheader("📋 模板一预览")
         st.dataframe(df_template, use_container_width=True)
 
-        # 下载 Excel
         output = io.BytesIO()
         wb = Workbook()
         ws = wb.active
@@ -595,7 +610,6 @@ with tab1:
                 if result_col_idx and j+1 == result_col_idx and value != "":
                     cell.fill = red_fill
 
-        # 合并参考品列和质量标准列
         merge_ranges_col1 = []
         merge_ranges_col3 = []
         start_row = 4
