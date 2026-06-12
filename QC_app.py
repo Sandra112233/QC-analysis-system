@@ -629,6 +629,7 @@ with tab1:
         wb = Workbook()
         ws = wb.active
         ws.title = "原始记录附页"
+        ws.insert_cols(1, 2)
 
         # 样式定义
         thin_border = Border(
