@@ -567,9 +567,9 @@ with tab1:
         if r2_last_idx >= 0:
             r2_rows = [r for r in template_data if str(r["编号"]) == "R2"]
             if len(r2_rows) >= 2:
-                avg_row = {"参考品": "", "编号": "平均值", "质量标准": "/"}
-                std_row = {"参考品": "", "编号": "标准偏差", "质量标准": "/"}
-                cv_row = {"参考品": "", "编号": "变异系数（CV值）", "质量标准": "/"}
+                avg_row = {"参考品": "", "编号": "平均值", "质量标准": ""}
+                std_row = {"参考品": "", "编号": "标准偏差", "质量标准": ""}
+                cv_row = {"参考品": "", "编号": "变异系数（CV值）", "质量标准": ""}
                 cv_values = {}
                 for ch in channels:
                     vals = []
@@ -708,23 +708,13 @@ with tab1:
         last_data_row = data_start_row + len(template_data) - 1
         sign_row = last_data_row + 2  # 空一行
 
-        # 找到 CY5 和 VIC 列的位置
-        cy5_col = None
-        vic_col = None
-        for j, col_name in enumerate(existing_cols):
-            if "CY5" in col_name:
-                cy5_col = j + 1
-            if "VIC" in col_name:
-                vic_col = j + 1
-
-        if cy5_col and vic_col:
-            # 合并整行，在指定列位置写文字
-            ws.merge_cells(start_row=sign_row, start_column=1, end_row=sign_row, end_column=len(existing_cols))
-            ws.cell(row=sign_row, column=1, value="").border = thin_border
-            # 在合并单元格中写入左右两部分文字
-            sign_text = f"检验人/日期：{' ' * (40)}复核人/日期："
-            ws.cell(row=sign_row, column=1, value=sign_text).font = Font(size=10)
-            ws.cell(row=sign_row, column=1).alignment = Alignment(horizontal='left', vertical='center')
+        # 签名行：整行合并
+        ws.merge_cells(start_row=sign_row, start_column=1, end_row=sign_row, end_column=len(existing_cols))
+        ws.cell(row=sign_row, column=1, value="检验人/日期：                                                            复核人/日期：")
+        ws.cell(row=sign_row, column=1).font = Font(size=10)
+        ws.cell(row=sign_row, column=1).alignment = Alignment(horizontal='left', vertical='center')
+        for c in range(1, len(existing_cols)+1):
+            ws.cell(row=sign_row, column=c).border = thin_border
 
         # 合并参考品列和质量标准列
         merge_ranges_col1 = []
