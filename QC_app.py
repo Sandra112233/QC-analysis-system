@@ -765,7 +765,17 @@ with tab1:
                 
                 # 合并质量标准列（R组）
                 if prefix in ["R1", "R2", "R3"]:
-                    ws.merge_cells(start_row=s, start_column=3, end_row=e, end_column=3)
+                    # 只合并数据行，不含统计行
+                    data_end = e
+                    for i, row in enumerate(template_data):
+                        if str(row.get("编号", "")) in ["平均值", "标准偏差", "变异系数（CV值）"]:
+                            stat_r = data_start_row + i
+                            if stat_r <= e and stat_r > s:
+                                data_end = stat_r - 1
+                                break
+                    if data_end >= s:
+                        ws.merge_cells(start_row=s, start_column=3, end_row=data_end, end_column=3)
+            
                 
                 # 合并结果判读规则列
                 if rule_col_idx:
