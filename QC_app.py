@@ -351,6 +351,7 @@ with tab1:
     uploaded_file = st.file_uploader("选择仪器导出的 .xls 文件", type=["xls", "xlsx"])
 
     if uploaded_file is not None:
+        # 读取数据
         try:
             df_raw = pd.read_excel(uploaded_file, header=6)
             if "Well" not in str(df_raw.columns) and "Sample Name" not in str(df_raw.columns):
@@ -371,6 +372,7 @@ with tab1:
         df_raw.columns = [str(c).strip() for c in df_raw.columns]
         df_raw = df_raw.dropna(how="all")
 
+        # 找Ct列
         ct_col = None
         for col in df_raw.columns:
             col_clean = col.replace(" ", "")
@@ -389,33 +391,52 @@ with tab1:
         st.subheader("📊 原始数据预览")
         st.dataframe(df_raw, use_container_width=True)
 
+        # 提取通道
         available_targets = df_raw["Target Name"].dropna().unique().tolist()
         available_targets_clean = [t.strip() for t in available_targets]
         channels = [t for t in config["channels"] if t in available_targets_clean]
 
-        # 提取样本列表
-        all_samples_raw = df_raw["Sample Name"].dropna().tolist()
-        all_samples_raw = [str(s).strip() for s in all_samples_raw if str(s).strip() != ""]
+        # ==================== 核心：逐行遍历构建样本列表 ====================
+        # 过滤有效行
+        df_data = df_raw.dropna(subset=["Sample Name", "Target Name"], how="all").copy()
+        df_data["Sample Name"] = df_data["Sample Name"].astype(str).str.strip()
+        df_data["Target Name"] = df_data["Target Name"].astype(str).str.strip()
 
-        # 非R样本：去重
-        non_r_samples = []
-        seen_non_r = set()
-        for s in all_samples_raw:
-            if not s.startswith("R") and s not in seen_non_r:
-                non_r_samples.append(s)
-                seen_non_r.add(s)
+        # 按原始顺序遍历，构建样本列表
+        # 非R样本：同一样本只保留一次（4个通道合并）
+        # R样本：同一样本每出现4行（4个通道）算一次重复，保留每次重复
+        
+        samples = []  # 最终样本列表（有序）
+        non_r_seen = set()  # 已处理的非R样本
+        r_buffer = {}  # R样本缓冲区：{sample_name: [已累积的通道数, 是否已记录本次重复]}
+        
+        for idx, row in df_data.iterrows():
+            sample = str(row["Sample Name"]).strip()
+            target = str(row["Target Name"]).strip()
+            
+            if not sample:
+                continue
+            
+            if sample.startswith("R"):
+                # R样本：每4行算一次重复
+                if sample not in r_buffer:
+                    r_buffer[sample] = {"count": 0, "recorded": False}
+                
+                r_buffer[sample]["count"] += 1
+                
+                # 每4行中的第1行记录一次（4个通道=1次重复）
+                if r_buffer[sample]["count"] % 4 == 1:
+                    samples.append(sample)
+                # 如果 count 是 4 的倍数，重置
+                if r_buffer[sample]["count"] % 4 == 0:
+                    r_buffer[sample]["count"] = 0
+            else:
+                # 非R样本：去重
+                if sample not in non_r_seen:
+                    samples.append(sample)
+                    non_r_seen.add(sample)
 
-        # R样本：连续相同的只保留一个
-        r_samples = []
-        prev_r = None
-        for s in all_samples_raw:
-            if s.startswith("R"):
-                if s != prev_r:
-                    r_samples.append(s)
-                prev_r = s
-
-        unique_samples_ordered = non_r_samples + r_samples
-
+        # ==================== 排序 ====================
         category_order = {"N": 1, "P": 2, "S": 3, "R": 4, "YANG": 5, "YIN": 6}
         def sort_key(sample):
             s = str(sample)
@@ -426,10 +447,14 @@ with tab1:
                     return (order, num)
             return (99, 0)
 
-        samples = sorted(unique_samples_ordered, key=sort_key)
+        samples = sorted(samples, key=sort_key)
 
+        # ==================== 构建模板一 ====================
         template_data = []
         current_category = ""
+        
+        # R样本计数：用于区分第几次重复
+        r_occurrence = {}
 
         for sample in samples:
             category = get_category(str(sample))
@@ -447,9 +472,22 @@ with tab1:
                 "质量标准": display_quality,
             }
 
-            sample_rows = df_raw[df_raw["Sample Name"].astype(str).str.strip() == str(sample)]
+            # 对于R样本，需要取当前次重复的数据
+            if sample.startswith("R"):
+                r_occurrence[sample] = r_occurrence.get(sample, 0) + 1
+                occ = r_occurrence[sample]
+                # 取第 occ 次重复的所有通道数据
+                # 在 df_data 中，该样本第 occ 次出现对应行范围：[(occ-1)*4 : occ*4]
+                sample_all_rows = df_data[df_data["Sample Name"] == sample]
+                # 取第 occ 组的4行
+                group_start = (occ - 1) * 4
+                group_end = occ * 4
+                sample_rows = sample_all_rows.iloc[group_start:group_end]
+            else:
+                sample_rows = df_data[df_data["Sample Name"] == sample]
+
             for ch in channels:
-                ch_row = sample_rows[sample_rows["Target Name"].astype(str).str.strip() == ch]
+                ch_row = sample_rows[sample_rows["Target Name"] == ch]
                 if len(ch_row) > 0:
                     ct_val = ch_row[ct_col].values[0]
                     row_data[f"{ch}通道Ct值"] = fmt_ct(ct_val)
@@ -468,7 +506,7 @@ with tab1:
 
             template_data.append(row_data)
 
-        # R1/R2 统计行
+        # R1/R2 统计行（R3不加）
         for prefix in ["R1", "R2"]:
             r_rows = [r for r in template_data if str(r["编号"]) == prefix]
             if len(r_rows) >= 2:
@@ -508,6 +546,7 @@ with tab1:
                 template_data.append(std_row)
                 template_data.append(cv_row)
 
+        # ==================== 构建最终列顺序 ====================
         final_columns = ["参考品", "编号", "质量标准"]
         for ch in channels:
             final_columns.append(config["channel_labels"].get(ch, f"{ch}通道Ct值"))
@@ -524,7 +563,7 @@ with tab1:
         st.subheader("📋 模板一预览")
         st.dataframe(df_template, use_container_width=True)
 
-        # 下载 Excel
+        # ==================== 下载 Excel ====================
         output = io.BytesIO()
         wb = Workbook()
         ws = wb.active
@@ -619,7 +658,6 @@ with tab1:
             save_record(record)
             st.success("✅ 已保存到历史记录！")
             st.rerun()
-
 # ==================== 历史记录 ====================
 with tab2:
     st.subheader("📂 历史记录")
