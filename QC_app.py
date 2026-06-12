@@ -780,7 +780,7 @@ with tab1:
         for j, col_name in enumerate(existing_cols):
             ws.column_dimensions[get_column_letter(j+1)].width = max(20, len(str(col_name))*2.5)
 
-        # 手动合并R1/R2/R3的质量标准列
+        # 手动合并R1/R2/R3的质量标准列（含统计行）
         for prefix in ["R1", "R2", "R3"]:
             r_start = None
             r_end = None
@@ -790,10 +790,15 @@ with tab1:
                     if r_start is None:
                         r_start = data_start_row + i
                     r_end = data_start_row + i
-                elif r_start is not None and sample in ["平均值", "标准偏差", "变异系数（CV值）"]:
-                    r_end = data_start_row + i
-            if r_start is not None and r_end is not None and r_end >= r_start:
-                ws.merge_cells(start_row=r_start, start_column=3, end_row=r_end, end_column=3)        
+                elif sample in ["平均值", "标准偏差", "变异系数（CV值）"]:
+                    if r_start is not None:
+                        r_end = data_start_row + i
+                else:
+                    if r_start is not None and sample != prefix and not sample.startswith(prefix):
+                        break
+            if r_start is not None and r_end is not None and r_end > r_start:
+                ws.merge_cells(start_row=r_start, start_column=3, end_row=r_end, end_column=3)    
+
         wb.save(output)
         output.seek(0)
 
