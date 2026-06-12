@@ -793,11 +793,12 @@ with tab1:
                 elif sample in ["平均值", "标准偏差", "变异系数（CV值）"]:
                     if r_start is not None:
                         r_end = data_start_row + i
-                else:
-                    if r_start is not None and sample != prefix and not sample.startswith(prefix):
+                elif sample.startswith("R") and sample != prefix:
+                    # 遇到其他R样本，如果还没结束当前合并就结束
+                    if r_start is not None:
                         break
             if r_start is not None and r_end is not None and r_end > r_start:
-                ws.merge_cells(start_row=r_start, start_column=3, end_row=r_end, end_column=3)    
+                ws.merge_cells(start_row=r_start, start_column=3, end_row=r_end, end_column=3) 
 
         wb.save(output)
         output.seek(0)
