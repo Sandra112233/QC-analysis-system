@@ -78,13 +78,13 @@ PROJECT_CONFIGS = {
             "R1": {
                 "CY5": "无要求", "FAM": "≤38", "Texas Red": "≤38", "VIC": "≤38",
                 "expected": "阳性",
-                "quality": "检测重复性参考品R1，重复检测10次，R1检测结果应均为阳性，且各重复性参考品检测结果Ct值的变异系数CV值均≤5%（内标通道无需进行统计）。",
+                "quality": "检测重复性参考品R1，重复检测10次，R1检测结果应均为甲型流感病毒阳性、乙型流感病毒阳性及新型冠状病毒阳性，且各重复性参考品检测结果Ct值的变异系数CV值均≤5%（内标通道无需进行统计）。",
                 "rule_text": "\"FAM通道Ct值\"为\"Ct≤38\"\n\"Texas Red通道Ct值\"为\"Ct≤38\"\n\"VIC通道Ct值\"为\"Ct≤38\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "R2": {
                 "CY5": "无要求", "FAM": "≤38", "Texas Red": "≤38", "VIC": "≤38",
                 "expected": "阳性",
-                "quality": "检测重复性参考品R2，重复检测10次，R2检测结果应均为阳性，且各重复性参考品检测结果Ct值的变异系数CV值均≤5%（内标通道无需进行统计）。",
+                "quality": "检测重复性参考品R2，重复检测10次，R2检测结果应均为甲型流感病毒阳性、乙型流感病毒阳性及新型冠状病毒阳性，且各重复性参考品检测结果Ct值的变异系数CV值均≤5%（内标通道无需进行统计）。",
                 "rule_text": "\"FAM通道Ct值\"为\"Ct≤38\"\n\"Texas Red通道Ct值\"为\"Ct≤38\"\n\"VIC通道Ct值\"为\"Ct≤38\"\n\"CY5通道Ct值\"为\"Ct≤38\""
             },
             "R3": {
@@ -233,12 +233,10 @@ def match_judge_rule(sample_name):
     judge_rules = config.get("judge_rules", {})
     s = str(sample_name)
     for key, rule in judge_rules.items():
-        # 纯字母前缀（如 N, YANG, YIN, R1, R2, R3）：用 startswith 匹配
         if re.match(r"^[A-Za-z]+\d*$", key):
             if s.startswith(key):
                 return rule
         else:
-            # 范围格式（如 P1-P10）：解析后精确匹配
             prefixes = parse_range(key)
             if s in prefixes:
                 return rule
@@ -273,7 +271,6 @@ def do_judge(row_data, channels, judge_rule):
     expected = judge_rule.get("expected", "") if judge_rule else ""
     pathogens = config["pathogens"]
 
-    # 统计有多少病毒通道阳性
     positive_count = 0
     for pathogen in pathogens:
         ch = pathogen["channel"]
@@ -287,12 +284,10 @@ def do_judge(row_data, channels, judge_rule):
         except (ValueError, TypeError):
             pass
 
-    # 多通道全阳且预期阳性 → 直接判阳性
     if positive_count >= 2 and expected == "阳性":
         rule_text = judge_rule.get("rule_text", "") if judge_rule else ""
         return "阳性", "符合规定", rule_text
 
-    # 按病原优先级判读
     for pathogen in pathogens:
         ch = pathogen["channel"]
         if ch not in channels:
@@ -310,7 +305,6 @@ def do_judge(row_data, channels, judge_rule):
         except (ValueError, TypeError):
             pass
 
-    # 判阴性
     all_negative = True
     for pathogen in pathogens:
         ch = pathogen["channel"]
@@ -351,9 +345,13 @@ def get_quality(sample_name):
     s = str(sample_name)
     judge_rules = config.get("judge_rules", {})
     for key, rule in judge_rules.items():
-        prefixes = parse_range(key)
-        if s in prefixes:
-            return rule.get("quality", "")
+        if re.match(r"^[A-Za-z]+\d*$", key):
+            if s.startswith(key):
+                return rule.get("quality", "")
+        else:
+            prefixes = parse_range(key)
+            if s in prefixes:
+                return rule.get("quality", "")
     return ""
 
 def fmt_ct(val):
@@ -437,7 +435,6 @@ with tab1:
             sample = str(row["Sample Name"]).strip()
             if not sample:
                 continue
-
             if sample.startswith("R"):
                 if sample not in r_buffer:
                     r_buffer[sample] = {"count": 0}
@@ -518,7 +515,6 @@ with tab1:
             template_data.append(row_data)
 
         # ==================== 在 R1/R2 数据后插入统计行 ====================
-        # 先找到 R1 和 R2 最后一行的位置
         r1_last_idx = -1
         r2_last_idx = -1
         for i, row in enumerate(template_data):
@@ -527,7 +523,6 @@ with tab1:
             elif str(row["编号"]) == "R2":
                 r2_last_idx = i
 
-        # 在 R1 最后一行之后插入统计行（倒序插入避免索引偏移）
         if r1_last_idx >= 0:
             r1_rows = [r for r in template_data if str(r["编号"]) == "R1"]
             if len(r1_rows) >= 2:
@@ -563,15 +558,12 @@ with tab1:
                 cv_ok = all(isinstance(cv_values.get(ch), (int, float)) and cv_values.get(ch) <= 5 for ch in channels if ch != "CY5")
                 cv_row["结果判读"] = "符合规定" if cv_ok else ""
                 cv_row["结果判读规则"] = '数值小于等于"5"'
-                # 倒序插入：先插 cv，再插 std，再插 avg
                 template_data.insert(r1_last_idx + 1, cv_row)
                 template_data.insert(r1_last_idx + 1, std_row)
                 template_data.insert(r1_last_idx + 1, avg_row)
-                # 更新 R2 索引（因为插入了3行）
                 if r2_last_idx > r1_last_idx:
                     r2_last_idx += 3
 
-        # 在 R2 最后一行之后插入统计行
         if r2_last_idx >= 0:
             r2_rows = [r for r in template_data if str(r["编号"]) == "R2"]
             if len(r2_rows) >= 2:
@@ -609,7 +601,7 @@ with tab1:
                 cv_row["结果判读规则"] = '数值小于等于"5"'
                 template_data.insert(r2_last_idx + 1, cv_row)
                 template_data.insert(r2_last_idx + 1, std_row)
-                template_data.insert(r2_last_idx + 1, avg_row)       
+                template_data.insert(r2_last_idx + 1, avg_row)
 
         final_columns = ["参考品", "编号", "质量标准"]
         for ch in channels:
@@ -667,7 +659,11 @@ with tab1:
                 cell = ws.cell(row=row_num, column=j+1, value=value)
                 cell.font = data_font
                 cell.border = thin_border
-                cell.alignment = Alignment(horizontal='center', vertical='center')
+                # 质量标准列(第3列)、结果判读规则列自动换行
+                if j+1 == 3 or (rule_col_idx and j+1 == rule_col_idx):
+                    cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+                else:
+                    cell.alignment = Alignment(horizontal='center', vertical='center')
                 if result_col_idx and j+1 == result_col_idx and value != "":
                     cell.fill = red_fill
 
@@ -693,13 +689,30 @@ with tab1:
         for start, end in merge_ranges_col3:
             if end > start:
                 ws.merge_cells(start_row=start, start_column=3, end_row=end, end_column=3)
-        # 结果判读规则列也合并
+
         rule_col_idx = existing_cols.index("结果判读规则") + 1 if "结果判读规则" in existing_cols else None
         if rule_col_idx:
             for start, end in merge_ranges_col1:
                 if end > start:
                     ws.merge_cells(start_row=start, start_column=rule_col_idx, end_row=end, end_column=rule_col_idx)
 
+        # 合并统计行的编号(第2列)和质量标准(第3列)
+        stat_rows = []
+        for i, row in enumerate(template_data):
+            if str(row["编号"]) in ["平均值", "标准偏差", "变异系数（CV值）"]:
+                stat_rows.append(i + 4)
+        if stat_rows:
+            groups = []
+            group_start = stat_rows[0]
+            for j in range(1, len(stat_rows)):
+                if stat_rows[j] != stat_rows[j-1] + 1:
+                    groups.append((group_start, stat_rows[j-1]))
+                    group_start = stat_rows[j]
+            groups.append((group_start, stat_rows[-1]))
+            for g_start, g_end in groups:
+                if g_end > g_start:
+                    ws.merge_cells(start_row=g_start, start_column=2, end_row=g_end, end_column=2)
+                    ws.merge_cells(start_row=g_start, start_column=3, end_row=g_end, end_column=3)
 
         for j, col_name in enumerate(existing_cols):
             ws.column_dimensions[get_column_letter(j+1)].width = max(15, len(str(col_name))*2)
