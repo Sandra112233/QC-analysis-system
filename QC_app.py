@@ -763,9 +763,9 @@ with tab1:
                 ws.cell(row=s, column=1).font = data_font
                 ws.cell(row=s, column=1).alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
                 
-                # 合并质量标准列（R组）
+                # 只合并数据行，不含统计行
                 if prefix in ["R1", "R2", "R3"]:
-                    # 只合并数据行，不含统计行
+                    # R组只合并数据行，不含统计行
                     data_end = e
                     for i, row in enumerate(template_data):
                         if str(row.get("编号", "")) in ["平均值", "标准偏差", "变异系数（CV值）"]:
@@ -775,6 +775,9 @@ with tab1:
                                 break
                     if data_end >= s:
                         ws.merge_cells(start_row=s, start_column=3, end_row=data_end, end_column=3)
+                else:
+                    # N/P/S/YANG/YIN 组合并质量标准列
+                    ws.merge_cells(start_row=s, start_column=3, end_row=e, end_column=3)
             
                 
                 # 合并结果判读规则列
