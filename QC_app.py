@@ -548,6 +548,9 @@ with tab1:
                     std_row[f"{ch}通道Ct值"] = s if not isinstance(s, str) else s
                     cv_row[f"{ch}通道Ct值"] = f"{c}%" if not isinstance(c, str) else c
                     cv_values[ch] = c
+                avg_row["CY5通道Ct值"] = "/"
+                std_row["CY5通道Ct值"] = "/"
+                cv_row["CY5通道Ct值"] = "/"
                 avg_row["检测结果"] = "/"
                 avg_row["结果判读"] = "/"
                 avg_row["结果判读规则"] = ""
@@ -589,6 +592,9 @@ with tab1:
                     std_row[f"{ch}通道Ct值"] = s if not isinstance(s, str) else s
                     cv_row[f"{ch}通道Ct值"] = f"{c}%" if not isinstance(c, str) else c
                     cv_values[ch] = c
+                avg_row["CY5通道Ct值"] = "/"
+                std_row["CY5通道Ct值"] = "/"
+                cv_row["CY5通道Ct值"] = "/"
                 avg_row["检测结果"] = "/"
                 avg_row["结果判读"] = "/"
                 avg_row["结果判读规则"] = ""
